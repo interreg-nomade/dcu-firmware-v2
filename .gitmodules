@@ -1,0 +1,3 @@
+[submodule "lib/pg_chipset_lib"]
+	path = lib/pg_chipset_lib
+	url = https://github.com/yncrearobotics-research/pg_serial_lib
