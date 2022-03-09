@@ -17,7 +17,7 @@
 #include "defines.h"
 
 #include "usart.h" // to declare UART transmit
-#include "app_init.h" // to declare QueueHandle_t
+#include "../../app/app_init.h" // to declare QueueHandle_t
 
 
 #define DBG_FC_TX_INFOS_ENABLED 1

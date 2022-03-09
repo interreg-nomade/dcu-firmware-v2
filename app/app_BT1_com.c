@@ -20,7 +20,7 @@
 #include "config/parameters_id.h"
 
 #define PRINTF_BT_COMMANAGER 1
-#define PRINTF_BT_COM 0
+#define PRINTF_BT_COM 1
 
 /* RTOS Variables */
 static osThreadId BT1RxTaskHandle;
@@ -78,7 +78,7 @@ void bt_init_rx_task(void)
 #if PRINTF_BT_COMMANAGER
 
     sprintf(string, "BT1_com_init_rx_task done. \n");
-    HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
+    HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
 #endif
 
     memset(&BT1RxMsg, 0, sizeof(BT_msg_t));

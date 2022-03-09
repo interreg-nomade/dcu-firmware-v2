@@ -20,15 +20,15 @@
 #include "usart.h"
 
 
-#include "stomeas_lib/storage_measurements.h"
-#include "stomeas_lib/storage_measurements_list.h"
-#include "stomeas_lib/storage_ring_buffer.h"
+#include "../lib/stomeas_lib/storage_measurements.h"
+#include "../lib/stomeas_lib/storage_measurements_list.h"
+#include "../lib/stomeas_lib/storage_ring_buffer.h"
 
 #include "queues/measurements/measurements_queue.h"
 #include "queues/sd_writer_service_queue/sd_writer_service_queue.h"
 #include "queues/android_device_com/android_com_queue.h"
 
-#define PRINT_APP_STORAGE_DBG_MSG 1
+#define PRINT_APP_STORAGE_DBG_MSG 0
 
 #define BIG_BUFFER_SIZE 128000
 

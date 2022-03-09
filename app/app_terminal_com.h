@@ -25,6 +25,7 @@ void com_init_rx_task(void);
 void com_RxHandler(char c);
 void terminal_com_init();
 void com_rst_msg(com_msg_t * pComMsg);
+void module_status_overview(void);
 
 
 #endif /* APP_TERMINAL_COM_H_ */

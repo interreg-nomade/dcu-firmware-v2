@@ -8,12 +8,14 @@
  *     Adapted for Nomade project: August 31, 2020 by Sarah Goossens
  *
  */
-#include "config/raw.h"
+#include "raw.h"
 #include <stdlib.h> //to declare malloc()
 #include "usart.h"  //to declare huart5
 #include "string.h" //to declare memset
 #include "../common.h"
 #include "../../Inc/imu_com.h"
+#include "app_terminal_com.h" // to be able to print module overview data with module_status_overview()
+
 
 #define RAW_DBG_PRINTF 1
 #define RAW_CONFIGURATION_TEST 0
@@ -24,6 +26,8 @@ extern imu_module imu_3;
 extern imu_module imu_4;
 extern imu_module imu_5;
 extern imu_module imu_6;
+extern imu_module imu_7;
+extern imu_module imu_8;
 
 extern imu_module *imu_array [];
 
@@ -39,7 +43,7 @@ extern QueueHandle_t pPrintQueue;
  */
 decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 {
-  int availableBTchannel = 6;
+  int availableBTchannel = 0; // increments when COMM_METHOD = Bluetooth of the instrument in the RAW file. This is used to fill the imu_array.
   if(buffer == NULL && config == NULL)
   {
 #if RAW_DBG_PRINTF
@@ -85,6 +89,7 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 //		sprintf(string, "[RAW] [decode_config] count value =  %0X\r\n", count);
 //		xQueueSend(pPrintQueue, string, 0);
 //#endif
+//		config->instruments[i].instrumentNr         = i;
 		config->instruments[i].instrumentID			= buffer[++count];
 		config->instruments[i].instrumentID			= config->instruments[i].instrumentID << 8;
 		config->instruments[i].instrumentID			= config->instruments[i].instrumentID | buffer[++count];
@@ -167,11 +172,18 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 #if RAW_DBG_PRINTF
 			sprintf(string, "[RAW] [decode_config] ---------- Communication Interface: %08X = ", config->instruments[i].comMethod);
 			xQueueSend(pPrintQueue, string, 0);
-            switch(config->instruments[i].comMethod)
+#endif
+			switch(config->instruments[i].comMethod)
             {
               case SETUP_PRM_COMM_METHOD_BT:
               {
+          	    if (availableBTchannel < 9)
+           	    { // if more than 8 BT instruments are defined in the RAW file, channel 8 will be overwritten.
+               	  availableBTchannel++;
+           	    }
+#if RAW_DBG_PRINTF
                 xQueueSend(pPrintQueue, "Bluetooth.\r\n", 0);
+#endif
                 break;
               }
 //              case SETUP_PRM_COMM_METHOD_UART:
@@ -221,17 +233,22 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 //              }
               case SETUP_PRM_COMM_METHOD_RTC:
               {
+#if RAW_DBG_PRINTF
       		    xQueueSend(pPrintQueue, "Real Time Clock (RTC).\r\n", 0);
-      		    availableBTchannel = 6;
+#endif
                 break;
               }
       		  default:
       		  {
+#if RAW_DBG_PRINTF
       		    xQueueSend(pPrintQueue, "Unknown communication method value.\r\n", 0);
-      		    availableBTchannel = 6;
+#endif
       		  }
             }
-#endif
+//#if RAW_DBG_PRINTF
+//      		sprintf(string, "[RAW] [decode_config] availableBTchannel: %02X = ", availableBTchannel);
+//      		xQueueSend(pPrintQueue, string, 0);
+//#endif
             break;
 		  }
 		  case SETUP_PRM_COMM_METHOD_VERSION:
@@ -323,9 +340,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].dataTypeOutput = config->instruments[i].dataTypeOutput << 8;
 			  }
 			}
-			if (availableBTchannel < 6)
-			{ // available channel is determined in SETUP_PRM_SAMPLERATE case
-			  imu_array[availableBTchannel]->outputDataType = config->instruments[i].dataTypeOutput;
+			if (config->instruments[i].comMethod == SETUP_PRM_COMM_METHOD_BT)
+			{
+			  imu_array[availableBTchannel-1]->outputDataType = config->instruments[i].dataTypeOutput;
+			  imu_array[availableBTchannel-1]->instrument = i;
 			}
 #if RAW_DBG_PRINTF
 			sprintf(string, "[RAW] [decode_config] ----------------- Data Type output: %08X = ", config->instruments[i].dataTypeOutput);
@@ -360,6 +378,31 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
               case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
               {
       		    xQueueSend(pPrintQueue, "IMU Quaternions + Gyroscope + Accelerometer @ 100Hz.\r\n", 0);
+      		    break;
+              }
+              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
+              {
+      		    xQueueSend(pPrintQueue, "IMU Quaternions (Quaternions only) @ 100Hz.\r\n", 0);
+      		    break;
+              }
+              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
+              {
+      		    xQueueSend(pPrintQueue, "IMU Quaternions 9DOF (Quaternions only).\r\n", 0);
+      		    break;
+              }
+              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
+              {
+      		    xQueueSend(pPrintQueue, "IMU Quaternions 9DOF (Quaternions only) @ 100Hz.\r\n", 0);
+      		    break;
+              }
+              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
+              {
+      		    xQueueSend(pPrintQueue, "IMU Gyroscope + Accelerometer + Magnetometer.\r\n", 0);
+      		    break;
+              }
+              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
+              {
+      		    xQueueSend(pPrintQueue, "IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz.\r\n", 0);
       		    break;
               }
               case SETUP_PRM_DATA_OUTPUT_DATATYPE_RTC:
@@ -437,17 +480,20 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].sampleRate = config->instruments[i].sampleRate << 8;
 			  }
 			}
-			// Find available Bluetooth channel
-			int j = 5;
-			while (j >= 0)
+//			// Find available Bluetooth channel
+//			int j = 5;
+//			while (j >= 0)
+//			{
+//			  if (!imu_array[j]->macAddressAvailable)
+//			  {
+//				availableBTchannel = j;
+//			  }
+//			  j--;
+//			}
+			if (config->instruments[i].comMethod == SETUP_PRM_COMM_METHOD_BT)
 			{
-			  if (!imu_array[j]->macAddressAvailable)
-			  {
-				availableBTchannel = j;
-			  }
-			  j--;
+			  imu_array[availableBTchannel-1]->sampleFrequency = *((float*)&config->instruments[i].sampleRate);
 			}
-			imu_array[availableBTchannel]->sampleFrequency = *((float*)&config->instruments[i].sampleRate);
 #if RAW_DBG_PRINTF
 			sprintf(string, "[RAW] [decode_config] ---------------------- Sample Rate: %08X = %3.0fHz.\r\n", config->instruments[i].sampleRate,*((float*)&config->instruments[i].sampleRate));
 			xQueueSend(pPrintQueue, string, 0);
@@ -748,18 +794,15 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			  }
 			  if (v > 0)
 			  {
-				if (availableBTchannel < 6)
+				if (config->instruments[i].comMethod == SETUP_PRM_COMM_METHOD_BT)
 				{
-				  imu_array[availableBTchannel]->mac_address[6-v] = buffer[count];
+				  imu_array[availableBTchannel-1]->mac_address[6-v] = buffer[count];
 				}
 			  }
 			}
 #if RAW_DBG_PRINTF
 			sprintf(string, "[RAW] [decode_config] ------- Bluetooth MAC address High: %08X\r\n", config->instruments[i].BTMACHigh);
 			xQueueSend(pPrintQueue, string, 0);
-//			  sprintf(string, "[RAW] [decode_config] count value =  %0X\n", count);
-//			  xQueueSend(pPrintQueue, string, 0);
-
 #endif
 			break;
 		  }
@@ -772,12 +815,11 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			  {
 				config->instruments[i].BTMACLow = config->instruments[i].BTMACLow << 8;
 			  }
-			  // Find available empty Bluetooth channel
 			  if (v > 0)
 			  {
-				if (availableBTchannel < 6)
+				if (config->instruments[i].comMethod == SETUP_PRM_COMM_METHOD_BT)
 				{
-				  imu_array[availableBTchannel]->mac_address[3-v] = buffer[count];
+				  imu_array[availableBTchannel-1]->mac_address[3-v] = buffer[count];
 				}
 			  }
 			}
@@ -785,22 +827,9 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			sprintf(string, "[RAW] [decode_config] -------- Bluetooth MAC address Low: %08X\r\n", config->instruments[i].BTMACLow);
 			xQueueSend(pPrintQueue, string, 0);
 #endif
-			if (availableBTchannel < 6)
+			if (config->instruments[i].comMethod == SETUP_PRM_COMM_METHOD_BT)
 			{
-			  imu_array[availableBTchannel]->macAddressAvailable = 1;
-#if RAW_DBG_PRINTF
-			  sprintf(string, "[RAW] [decode_config] Found available Bluetooth channel: %s.\r\n", imu_array[availableBTchannel]->name);
-			  xQueueSend(pPrintQueue, string, 0);
-//			  sprintf(string, "[RAW] [decode_config] count value =  %0X\r\n", count);
-//			  xQueueSend(pPrintQueue, string, 0);
-#endif
-			}
-			else
-			{
-#if RAW_DBG_PRINTF
-		      sprintf(string, "[RAW] [decode_config] No more available Bluetooth channels, rework the RAW configuration file.\r\n");
-		      xQueueSend(pPrintQueue, string, 0);
-#endif
+			  imu_array[availableBTchannel-1]->macAddressAvailable = 1;
 			}
 			break;
 		  }
@@ -833,24 +862,12 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 #endif
 	    return NO_ETX;
 	  }
-	  else
-	  {
-#if RAW_DBG_PRINTF
-		xQueueSend(pPrintQueue, "[RAW] [decode_config] End of text found.\n", 0);
-#endif
-	  }
 	  if(buffer[++count] != EOT)
 	  {
 #if RAW_DBG_PRINTF
 	    xQueueSend(pPrintQueue, "[RAW] [decode_config] No End of transmission.\n", 0);
 #endif
 	    return NO_EOT;
-	  }
-	  else
-	  {
-#if RAW_DBG_PRINTF
-	    xQueueSend(pPrintQueue, "[RAW] [decode_config] End of transmission found.\n", 0);
-#endif
 	  }
     } /* End of if {Start of text found} */
     else
@@ -868,10 +885,13 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 #endif
 	return NO_SOH;
   }
-#if RAW_DBG_PRINTF
-  xQueueSend(pPrintQueue, "[RAW] [decode_config] Decoding success.\n", 0);
-#endif
-  HAL_Delay(1000);
+//#if RAW_DBG_PRINTF
+//  xQueueSend(pPrintQueue, "[RAW] [decode_config] Decoding success.\n", 0);
+//#endif
+//  HAL_Delay(1000);
+
+  //module_status_overview();
+
   return DECODE_SUCCESS;
 }
 

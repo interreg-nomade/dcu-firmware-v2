@@ -29,7 +29,7 @@
 #include <stdbool.h>
 
 // sh2_hal_impl.h should be provided by system designer
-#include "sh2_hal_impl.h"
+#include "../../pinterface/sh2_interface/sh2_hal_impl.h"
 
 #ifndef SH2_HAL_MAX_TRANSFER
 #error SH2_HAL_MAX_TRANSFER must be defined by sh2_hal_impl.h

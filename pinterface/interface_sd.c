@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "board.h"
+#include "../board/board.h"
 #include "interface_sd.h"
 #include "fatfs.h"
 #include "../app/queues/config_service/config_service_queue.h"
@@ -425,8 +425,8 @@ unsigned int rawConfFile_Append(unsigned char * buffer, unsigned int size)
 	{
 		if(wBytes != size)
 		{
-			xQueueSend(pPrintQueue, "[INTERFACE_SD] [rawConfFile_Close] Error in write of the raw configuration file: \n", 0);
-			xQueueSend(pPrintQueue, "                                   size of the information received from the ANDROID Device is not equal to data in the file\n", 0);
+//			xQueueSend(pPrintQueue, "[INTERFACE_SD] [rawConfFile_Close] Error in write of the raw configuration file: \n", 0);
+//			xQueueSend(pPrintQueue, "                                   size of the information received from the ANDROID Device is not equal to data in the file\n", 0);
 			return 0;
 		}
 		else
@@ -438,8 +438,8 @@ unsigned int rawConfFile_Append(unsigned char * buffer, unsigned int size)
 	}
 	else
 	{
-		sprintf(string, "[INTERFACE_SD] [rawConfFile_Close] Error during the write operation of the configuration file\n");
-		xQueueSend(pPrintQueue, string, 0);
+//		sprintf(string, "[INTERFACE_SD] [rawConfFile_Close] Error during the write operation of the configuration file\n");
+//		xQueueSend(pPrintQueue, string, 0);
 		/* CLose the raw configuration file */
 		rawConfFile_Close();
 		return 0;
@@ -683,7 +683,7 @@ unsigned int rawConfigInit(void)
   memcpy(rawConfig.buffer, 0, sizeof(rawConfig.buffer));
   rawConfig.numElems = 0;
   rawConfig.release();
-#ifdef INTERFACE_SD_DBG_PRINTF
+#if INTERFACE_SD_DBG_PRINTF
   xQueueSend(pPrintQueue, "[INTERFACE_SD] [rawCongigInit] Memory Buffer for RAW file reserved.\n", 0);
 #endif
   return 1;

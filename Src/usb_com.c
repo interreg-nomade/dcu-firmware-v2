@@ -24,7 +24,7 @@
 #include "uart_com.h"
 #include "usart.h"
 #include <string.h>
-#include "app_init.h" // to declare QueueHandle_t
+#include "../app/app_init.h" // to declare QueueHandle_t
 
 #define PRINTF_USB_COM 1
 
@@ -65,39 +65,43 @@ void USB_COM_show_menu(void){
 	  xQueueSend(pPrintQueue, "________________________________________________________________________\n", 0);
 	  xQueueSend(pPrintQueue, "			General functions\n", 0);
 	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
-	  xQueueSend(pPrintQueue, "Command \"1\": Connect\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"2\": Disconnect\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"3\": Go to sleep\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"6\": Print MAC addresses to which the BLE slots should connect\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"9\": Change MAC address of a BLE slot\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"d\": Print RTC date and time\n", 0);
-	  xQueueSend(pPrintQueue, "________________________________________________________________________\n", 0);
-	  xQueueSend(pPrintQueue, "			IMU communication (sended to all connected modules)\n", 0);
-	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
-	  xQueueSend(pPrintQueue, "Command \"c\": Start calibration\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"s\": Start synchronization\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"r\": Start the measurement with synchronisation\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"t\": Start the measurement without synchronisation\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"e\": End the measurement\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"1\": Send connected device list to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"2\": Request connected device list to nRF52.\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"3\": Request to start measurement to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"4\": Request to stop measurement to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"5\": Send output data type for all modules to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"6\": Request to start synchronization to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"7\": Request to stop synchronization to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"8\": Request calibration of connected modules to nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"9\": Reset nRF52\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"a\": Request battery level of connected modules to nRF52\n", 0);
 	  xQueueSend(pPrintQueue, "Command \"f\": Change sampling frequency\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"4\": Get the battery voltage\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"5\": Get the system tick\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"a\": Get the IMU module status\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"z\": Get the IMU module software version\n", 0);
+	  xQueueSend(pPrintQueue, "Command \"m\": Show overview status of module library\n", 0);
 	  xQueueSend(pPrintQueue, "________________________________________________________________________\n", 0);
-	  xQueueSend(pPrintQueue, "			SD Card functions\n", 0);
-	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
-	  xQueueSend(pPrintQueue, "Command \"m\": Mount SD card\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"u\": Unmount SD card\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"n\": Create new file\n", 0);
-	  xQueueSend(pPrintQueue, "________________________________________________________________________\n", 0);
-	  xQueueSend(pPrintQueue, "			Change data format\n", 0);
-	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
-	  xQueueSend(pPrintQueue, "Command \"g\": Only Quaternion data\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"h\": Only Gyroscope data\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"j\": Only Accelerometer data\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"k\": Gyroscope + Accelerometer data\n", 0);
-	  xQueueSend(pPrintQueue, "Command \"l\": Quaternion + Gyroscope + Accelerometer data\n", 0);
+//	  xQueueSend(pPrintQueue, "			IMU communication (sended to all connected modules)\n", 0);
+//	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"c\": Start calibration\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"s\": Start synchronization\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"r\": Start the measurement with synchronisation\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"t\": Start the measurement without synchronisation\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"e\": End the measurement\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"f\": Change sampling frequency\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"a\": Get the IMU module status\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"z\": Get the IMU module software version\n", 0);
+//	  xQueueSend(pPrintQueue, "________________________________________________________________________\n", 0);
+//	  xQueueSend(pPrintQueue, "			SD Card functions\n", 0);
+//	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"m\": Mount SD card\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"u\": Unmount SD card\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"n\": Create new file\n", 0);
+//	  xQueueSend(pPrintQueue, "________________________________________________________________________\n", 0);
+//	  xQueueSend(pPrintQueue, "			Change data format\n", 0);
+//	  xQueueSend(pPrintQueue, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"g\": Only Quaternion data\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"h\": Only Gyroscope data\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"j\": Only Accelerometer data\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"k\": Gyroscope + Accelerometer data\n", 0);
+//	  xQueueSend(pPrintQueue, "Command \"l\": Quaternion + Gyroscope + Accelerometer data\n", 0);
 	  xQueueSend(pPrintQueue, "########################################################################\n\n", 0);
 }
 
@@ -116,13 +120,13 @@ void USB_COM_print_value_ln(const char* str, uint32_t value)
 {
   char char_array [100];
   sprintf(char_array, str, value);
-  UART_COM_write(&huart5, (uint8_t *)char_array, strlen(char_array));
+  UART_COM_write(&huart7, (uint8_t *)char_array, strlen(char_array));
 }
 
 void USB_COM_print_info(const char* str, const char* str2)
 {
-	UART_COM_print(&huart5, str);
-	UART_COM_print_ln(&huart5, str2);
+	UART_COM_print(&huart7, str);
+	UART_COM_print_ln(&huart7, str2);
 }
 
 void USB_COM_print_buffer_hex(uint8_t *buffer, uint8_t len)

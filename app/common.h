@@ -37,6 +37,7 @@ do { 			\
 
 #define RAW_CONFIG_BUFFER_SIZE 1024
 #define RAM1_PLACE	__attribute__((section(".RAM1_OBJ")))
+#define SENSOR_EVENT_QUEUE_SIZE (20) // used in app_BLEmoduleX.c Size of the queue which will handle the sensor value, if sample frequency is set to 10Hz, this could be 100
 
 typedef enum{
 	CONF_NOT_READY=0,

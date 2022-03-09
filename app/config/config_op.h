@@ -33,11 +33,13 @@ int config_createStoragePacket(decoded_config_t * pConf,
 		unsigned int * pSize);
 
 int getInstrumentFromConfig(decoded_config_t * config, instrument_config_t ** pConf, int type);
+//!int getInstrumentFromConfig(decoded_config_t * config, instrument_config_t ** pConf, int type, int number);
 int getNumberOfInstrumentSpecificFromConfig(decoded_config_t * conf, int type);
 int config_linkParsingFunctions_fromList(decoded_config_t * pConf, parsing_assoc_t * list, unsigned int nNodes);
 
 int config_copy(decoded_config_t * pDest, decoded_config_t * pSource);
 
 unsigned int config_getStoragePacketSize(decoded_config_t * pConf);
+void refreshBLEmoduleData(const imu_100Hz_data_t *sensorEvent, imu_100Hz_data_t * imu);
 
 #endif /* CONFIG_CONFIG_OP_H_ */

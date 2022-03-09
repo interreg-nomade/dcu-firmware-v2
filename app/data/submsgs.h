@@ -7,7 +7,7 @@
 #ifndef DATA_SUBMSGS_H_
 #define DATA_SUBMSGS_H_
 
-#include "data/structures.h"
+#include "structures.h"
 
 #define SUB_MSG_ID_TIMESTAMP		0x0F
 

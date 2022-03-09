@@ -49,23 +49,28 @@ int datatypeToRaw_imu_6axis(imu_data_t * pImu, unsigned int scale, unsigned char
 int datatypeToRaw_imu_quat(imu_100Hz_data_t * pImu, unsigned char *dest);
 int datatypeToRaw_imu_quat_gyro_acc(imu_100Hz_data_t * pImu, unsigned char *dest);
 int datatypeToRaw_imu_quat_gyro_acc_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest);
+int datatypeToRaw_imu_quat_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest);
+int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest);
+int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest);
+int datatypeToRaw_imu_gyro_acc_mag(imu_100Hz_data_t * pImu, unsigned char *dest);
+int datatypeToRaw_imu_gyro_acc_mag_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest);
 
 int datatypeToRaw_usbad_instrument(usbad_data_t *pData, unsigned char *dest);
 int datatypeToRaw_usbad_sensor_instrument(usbad_data_t *pData, unsigned char *dest);
 
-int datatypeToRaw_canDistanceNodeD1(can_distance_node_d1 * pData, unsigned char *dest);
-int datatypeToRaw_canDistanceNodeD2(can_distance_node_d2 * pData, unsigned char *dest);
-int datatypeToRaw_canDistanceNodeD3(can_distance_node_d3 * pData, unsigned char *dest);
-int datatypeToRaw_canDistanceNodeD4(can_distance_node_d4 * pData, unsigned char *dest);
-int datatypeToRaw_canDistanceNodeD5(can_distance_node_d5 * pData, unsigned char *dest);
-int datatypeToRaw_canDistanceNodeD6(can_distance_node_d6 * pData, unsigned char *dest);
-
-int datatypeToRaw_canDistanceNodeD7(can_distance_node_d6 * pData, unsigned char *dest);
-int datatypeToRaw_canDistanceNodeD8(can_distance_node_d5 * pData, unsigned char * pDest);
-
-
-
-int datatypeToRaw_gpsMinData(gps_data_t * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD1(can_distance_node_d1 * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD2(can_distance_node_d2 * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD3(can_distance_node_d3 * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD4(can_distance_node_d4 * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD5(can_distance_node_d5 * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD6(can_distance_node_d6 * pData, unsigned char *dest);
+//
+//int datatypeToRaw_canDistanceNodeD7(can_distance_node_d6 * pData, unsigned char *dest);
+//int datatypeToRaw_canDistanceNodeD8(can_distance_node_d5 * pData, unsigned char * pDest);
+//
+//
+//
+//int datatypeToRaw_gpsMinData(gps_data_t * pData, unsigned char *dest);
 
 
 /* values defined below are use to avoid the overflows using snprintf */
@@ -95,38 +100,38 @@ int datatypeToAscii_imu_9axis_rot_vec(unsigned int instrumentType, imu_data_t * 
 
 int datatypeToAscii_imu_6axis(unsigned int instrumentType, imu_data_t * pImu, unsigned char *dest, unsigned int lineReturn);
 
-int datatypeToAscii_canDistanceNodeD1(unsigned int instrumentType, can_distance_node_d1 * pData, unsigned char *dest, unsigned int lineReturn);
+//int datatypeToAscii_canDistanceNodeD1(unsigned int instrumentType, can_distance_node_d1 * pData, unsigned char *dest, unsigned int lineReturn);
+//
+//int datatypeToAscii_canDistanceNodeD2(unsigned int instrumentType, can_distance_node_d2 * pData, unsigned char *dest, unsigned int lineReturn);
+//
+//
+//int datatypeToAscii_canDistanceNodeD3(unsigned int instrumentType, can_distance_node_d3 * pData, unsigned char *dest, unsigned int lineReturn);
+//
+//int datatypeToAscii_canDistanceNodeD4(unsigned int instrumentType, can_distance_node_d4 * pData, unsigned char *dest, unsigned int lineReturn);
+//
+//int datatypeToAscii_canDistanceNodeD5(unsigned int instrumentType, can_distance_node_d5 * pData, unsigned char *dest, unsigned int lineReturn);
+//int datatypeToAscii_canDistanceNodeD6(unsigned int instrumentType, can_distance_node_d6 * pData, unsigned char *dest, unsigned int lineReturn);
+//
+//int datatypeToAscii_gpsMinData(unsigned int instrumentType, gps_data_t * pData, unsigned char *dest, unsigned int lineReturn);
 
-int datatypeToAscii_canDistanceNodeD2(unsigned int instrumentType, can_distance_node_d2 * pData, unsigned char *dest, unsigned int lineReturn);
 
-
-int datatypeToAscii_canDistanceNodeD3(unsigned int instrumentType, can_distance_node_d3 * pData, unsigned char *dest, unsigned int lineReturn);
-
-int datatypeToAscii_canDistanceNodeD4(unsigned int instrumentType, can_distance_node_d4 * pData, unsigned char *dest, unsigned int lineReturn);
-
-int datatypeToAscii_canDistanceNodeD5(unsigned int instrumentType, can_distance_node_d5 * pData, unsigned char *dest, unsigned int lineReturn);
-int datatypeToAscii_canDistanceNodeD6(unsigned int instrumentType, can_distance_node_d6 * pData, unsigned char *dest, unsigned int lineReturn);
-
-int datatypeToAscii_gpsMinData(unsigned int instrumentType, gps_data_t * pData, unsigned char *dest, unsigned int lineReturn);
-
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD1(unsigned char *source, unsigned int size, void * pData);
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD2(unsigned char *source, unsigned int size, void * pData);
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD3(unsigned char *source, unsigned int size, void * pData);
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD4(unsigned char *source, unsigned int size, void * pData);
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD5(unsigned char *source, unsigned int size, void * pData);
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD6(unsigned char *source, unsigned int size, void * pData);
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD7(unsigned char *source, unsigned int size, void * pData);
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD8(unsigned char * pSource, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD1(unsigned char *source, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD2(unsigned char *source, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD3(unsigned char *source, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD4(unsigned char *source, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD5(unsigned char *source, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD6(unsigned char *source, unsigned int size, void * pData);
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD7(unsigned char *source, unsigned int size, void * pData);
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD8(unsigned char * pSource, unsigned int size, void * pData);
 
 int datatypeToRaw_joystick_linx(pwc_data_t * pData, unsigned char *dest);
 

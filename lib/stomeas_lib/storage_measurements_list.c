@@ -9,8 +9,8 @@
 
 #include "storage_measurements_list.h"
 #include "ff.h"
-#include "data_op/op.h"
-#include "common.h"
+#include "../../util/data_op/op.h"
+#include "../../app/common.h"
 #include <string.h>
 
 #define MEASUREMENT_LIST_FILENAME "MEASLIST.BIN"

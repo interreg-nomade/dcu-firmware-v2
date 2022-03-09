@@ -9,7 +9,7 @@
 
 #include  <errno.h>
 #include  <sys/unistd.h> // STDOUT_FILENO, STDERR_FILENO
-#include "project_config.h"
+#include "../config/project_config.h"
 
 #if RTT_DBG_MSG_ENABLE
 	#include "RTT/SEGGER_RTT.h"

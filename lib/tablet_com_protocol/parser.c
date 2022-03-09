@@ -17,7 +17,7 @@
 #include "../ring_buffer/ringbuffer_char.h"
 
 #include "usart.h"
-#include "app_init.h" // to declare QueueHandle_t
+#include "../../app/app_init.h" // to declare QueueHandle_t
 
 /* Variable definitions */
 static ring_buffer_t cplRingbufRx;

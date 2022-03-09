@@ -7,8 +7,8 @@
 
 #include "submsgs.h"
 
-#include "data/operations.h"
-#include "data_op/op.h"
+#include "operations.h"
+#include "../../util/data_op/op.h"
 
 //#include "stm32h7xx_hal_conf.h" /* For debug only / assert param use */
 

@@ -13,16 +13,21 @@
 #include "usart.h" // to be able to use print
 
 #include "operations.h"
-#include "app_init.h" // to declare QueueHandle_t
+#include "../app_init.h" // to declare QueueHandle_t
 
 /* Custom libraries */
 /* Util functions for the parsing */
-#include "data_op/op.h"
+#include "../../util/data_op/op.h"
 
 extern char string[];
 extern QueueHandle_t pPrintQueue;
 
 #define PRINTF_OPERATIONS_DBG 1
+
+#define FIXED_POINT_FRACTIONAL_BITS_QUAT    30          // Number of bits used for comma part of quaternion data
+#define RAW_Q_FORMAT_GYR_COMMA_BITS         5           // Number of bits used for comma part of raw data.
+#define RAW_Q_FORMAT_ACC_COMMA_BITS         10          // Number of bits used for comma part of raw data.
+#define RAW_Q_FORMAT_CMP_COMMA_BITS         4
 
 
 
@@ -515,7 +520,7 @@ int imu6_data_to_int16_t_scaled(imu_data_t imu, unsigned int scale, unsigned cha
 /* todo: move to a specific file */
 
 
-#include <app_init.h>
+#include "../app_init.h"
 
 int imu_data_log(imu_data_t * imu, char * dest, size_t * size)
 {
@@ -768,46 +773,15 @@ int datatypeToRaw_imu_quat(imu_100Hz_data_t * pImu, unsigned char *dest)
   unsigned int rotScale = 1;
   memset(&imu, 0, sizeof(imu_100Hz_data_t));
   imu = *pImu; // Copy data as we will modify it
-//  Only Quaternions will be used:
-//	imu.accelerometer.x *= scale;
-//	imu.accelerometer.y *= scale;
-//	imu.accelerometer.z *= scale;
-//	imu.gyroscope.x     *= scale;
-//	imu.gyroscope.y     *= scale;
-//	imu.gyroscope.z     *= scale;
-  imu.rotVectors1.real *= rotScale;
-  imu.rotVectors1.i    *= rotScale;
-  imu.rotVectors1.j    *= rotScale;
-  imu.rotVectors1.k    *= rotScale;
+//  imu.rotVectors1.real *= rotScale;
+//  imu.rotVectors1.i    *= rotScale;
+//  imu.rotVectors1.j    *= rotScale;
+//  imu.rotVectors1.k    *= rotScale;
+  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
   short tmp = 0; /* Temporary variable used for the type cast and shift */
-//	tmp = (short) imu.accelerometer.x;
-//	dest[0] =  (tmp >> 8) & 0xFF;
-//	dest[1] =  (tmp) & 0xFF;
-//	tmp = (short) imu.accelerometer.y;
-//	dest[2] =  (tmp >> 8) & 0xFF;
-//	dest[3] =  tmp & 0xFF;
-//	tmp = (short) imu.accelerometer.z;
-//	dest[4] = tmp >> 8 & 0xFF;
-//	dest[5] = tmp & 0xFF;
-//	tmp = (short) imu.gyroscope.x;
-//	dest[6] =  tmp >> 8 & 0xFF;
-//	dest[7] = tmp & 0xFF;
-//	tmp = (short) imu.gyroscope.y;
-//	dest[8] =  tmp >> 8 & 0xFF;
-//	dest[9] =  tmp & 0xFF;
-//	tmp = (short) imu.gyroscope.z;
-//	dest[10] =  tmp >> 8 & 0xFF;
-//	dest[11] =  tmp & 0xFF;
-//	tmp = (short) imu.magnetometer.x;
-//	dest[12] =  tmp >> 8 & 0xFF;
-//	dest[13] =  tmp & 0xFF;
-//	tmp = (short) imu.magnetometer.y;
-//	dest[14] =  tmp >> 8 & 0xFF;
-//	dest[15] = tmp & 0xFF;
-//	tmp = (short) imu.magnetometer.z;
-//	dest[16] = tmp >> 8 & 0xFF;
-//	dest[17] = tmp & 0xFF;
-// Only Quaternions will be used:
 	tmp = (short) imu.rotVectors1.real;
 	dest[0] = tmp >> 8 & 0xFF;
 	dest[1] = tmp & 0xFF;
@@ -881,15 +855,6 @@ int datatypeToRaw_imu_quat_gyro_acc(imu_100Hz_data_t * pImu, unsigned char *dest
   tmp = (short) imu.accelerometer1.z;
   dest[18] = tmp >> 8 & 0xFF;
   dest[19] = tmp & 0xFF;
-//  tmp = (short) imu.magnetometer.x;
-//  dest[12] =  tmp >> 8 & 0xFF;
-//  dest[13] =  tmp & 0xFF;
-//  tmp = (short) imu.magnetometer.y;
-//  dest[14] =  tmp >> 8 & 0xFF;
-//  dest[15] = tmp & 0xFF;
-//  tmp = (short) imu.magnetometer.z;
-//  dest[16] = tmp >> 8 & 0xFF;
-//  dest[17] = tmp & 0xFF;
 //#if PRINTF_OPERATIONS_DBG
 //	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
 //												(unsigned int) HAL_GetTick(),
@@ -1000,6 +965,363 @@ int datatypeToRaw_imu_quat_gyro_acc_100Hz(imu_100Hz_data_t * pImu, unsigned char
   return 40;
 }
 
+
+int datatypeToRaw_imu_quat_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+  if (!dest || !pImu)
+  { /* Try the pointers */
+	return 0;
+  }
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+//  imu.rotVectors1.real *= rotScale;
+//  imu.rotVectors1.i    *= rotScale;
+//  imu.rotVectors1.j    *= rotScale;
+//  imu.rotVectors1.k    *= rotScale;
+//  imu.rotVectors2.real *= rotScale;
+//  imu.rotVectors2.i    *= rotScale;
+//  imu.rotVectors2.j    *= rotScale;
+//  imu.rotVectors2.k    *= rotScale;
+  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.real = ((float) imu.rotVectors2.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.i    = ((float) imu.rotVectors2.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.j    = ((float) imu.rotVectors2.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.k    = ((float) imu.rotVectors2.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  short tmp = 0; /* Temporary variable used for the type cast and shift */
+  tmp = (short) imu.rotVectors1.real;
+  dest[0] = tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.i;
+  dest[2] = tmp >> 8 & 0xFF;
+  dest[3] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.j;
+  dest[4] = tmp >> 8 & 0xFF;
+  dest[5] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.k;
+  dest[6] = tmp >> 8 & 0xFF;
+  dest[7] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.real;
+  dest[8] = tmp >> 8 & 0xFF;
+  dest[9] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.i;
+  dest[10] = tmp >> 8 & 0xFF;
+  dest[11] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.j;
+  dest[12] = tmp >> 8 & 0xFF;
+  dest[13] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.k;
+  dest[14] = tmp >> 8 & 0xFF;
+  dest[15] = tmp & 0xFF;
+//#if PRINTF_OPERATIONS_DBG
+//	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
+//												(unsigned int) HAL_GetTick(),
+//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
+  return 16;
+}
+
+int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+  if (!dest || !pImu)
+  { /* Try the pointers */
+	return 0;
+  }
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+//  imu.rotVectors1.real *= rotScale;
+//  imu.rotVectors1.i    *= rotScale;
+//  imu.rotVectors1.j    *= rotScale;
+//  imu.rotVectors1.k    *= rotScale;
+  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  short tmp = 0; /* Temporary variable used for the type cast and shift */
+  tmp = (short) imu.rotVectors1.real;
+  dest[0] = tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.i;
+  dest[2] = tmp >> 8 & 0xFF;
+  dest[3] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.j;
+  dest[4] = tmp >> 8 & 0xFF;
+  dest[5] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.k;
+  dest[6] = tmp >> 8 & 0xFF;
+  dest[7] = tmp & 0xFF;
+#if PRINTF_OPERATIONS_DBG
+  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
+												(unsigned int) HAL_GetTick(),
+												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+  xQueueSend(pPrintQueue, string, 0);
+#endif
+  return 8;
+}
+
+int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+  if (!dest || !pImu)
+  { /* Try the pointers */
+	return 0;
+  }
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+//  imu.rotVectors1.real *= rotScale;
+//  imu.rotVectors1.i    *= rotScale;
+//  imu.rotVectors1.j    *= rotScale;
+//  imu.rotVectors1.k    *= rotScale;
+//  imu.rotVectors2.real *= rotScale;
+//  imu.rotVectors2.i    *= rotScale;
+//  imu.rotVectors2.j    *= rotScale;
+//  imu.rotVectors2.k    *= rotScale;
+  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.real = ((float) imu.rotVectors2.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.i    = ((float) imu.rotVectors2.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.j    = ((float) imu.rotVectors2.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+  imu.rotVectors2.k    = ((float) imu.rotVectors2.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+
+  short tmp = 0; /* Temporary variable used for the type cast and shift */
+  tmp = (short) imu.rotVectors1.real;
+  dest[0] = tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.i;
+  dest[2] = tmp >> 8 & 0xFF;
+  dest[3] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.j;
+  dest[4] = tmp >> 8 & 0xFF;
+  dest[5] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.k;
+  dest[6] = tmp >> 8 & 0xFF;
+  dest[7] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.real;
+  dest[8] = tmp >> 8 & 0xFF;
+  dest[9] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.i;
+  dest[10] = tmp >> 8 & 0xFF;
+  dest[11] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.j;
+  dest[12] = tmp >> 8 & 0xFF;
+  dest[13] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.k;
+  dest[14] = tmp >> 8 & 0xFF;
+  dest[15] = tmp & 0xFF;
+//#if PRINTF_OPERATIONS_DBG
+//	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
+//												(unsigned int) HAL_GetTick(),
+//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
+  return 16;
+}
+
+int datatypeToRaw_imu_gyro_acc_mag(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+  if (!dest || !pImu)
+  { /* Try the pointers */
+    return 0;
+  }
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+//  imu.accelerometer1.x *= scale;
+//  imu.accelerometer1.y *= scale;
+//  imu.accelerometer1.z *= scale;
+//  imu.gyroscope1.x     *= scale;
+//  imu.gyroscope1.y     *= scale;
+//  imu.gyroscope1.z     *= scale;
+//  imu.magnetometer1.x  *= scale;
+//  imu.magnetometer1.y  *= scale;
+//  imu.magnetometer1.z  *= scale;
+  imu.accelerometer1.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer1.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer1.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.gyroscope1.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.gyroscope1.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.gyroscope1.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.magnetometer1.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer1.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer1.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+
+
+
+
+
+  short tmp = 0; /* Temporary variable used for the typecast and shift */
+// in future, use the folowing union
+#if 0
+	union {
+		short tmp;
+		unsigned char bytes[2];
+	} u;
+	memset(&u, 0, sizeof(u));
+#endif
+  tmp = (short) imu.gyroscope1.x;
+  dest[0] =  tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+  tmp = (short) imu.gyroscope1.y;
+  dest[2] =  tmp >> 8 & 0xFF;
+  dest[3] =  tmp & 0xFF;
+  tmp = (short) imu.gyroscope1.z;
+  dest[4] =  tmp >> 8 & 0xFF;
+  dest[5] =  tmp & 0xFF;
+  tmp = (short) imu.accelerometer1.x;
+  dest[6] =  (tmp >> 8) & 0xFF;
+  dest[7] =  (tmp) & 0xFF;
+  tmp = (short) imu.accelerometer1.y;
+  dest[8] =  (tmp >> 8) & 0xFF;
+  dest[9] =  tmp & 0xFF;
+  tmp = (short) imu.accelerometer1.z;
+  dest[10] = tmp >> 8 & 0xFF;
+  dest[11] = tmp & 0xFF;
+  tmp = (short) imu.magnetometer1.x;
+  dest[12] =  tmp >> 8 & 0xFF;
+  dest[13] =  tmp & 0xFF;
+  tmp = (short) imu.magnetometer1.y;
+  dest[14] =  tmp >> 8 & 0xFF;
+  dest[15] = tmp & 0xFF;
+  tmp = (short) imu.magnetometer1.z;
+  dest[16] = tmp >> 8 & 0xFF;
+  dest[17] = tmp & 0xFF;
+  return 18;
+}
+
+int datatypeToRaw_imu_gyro_acc_mag_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+if (!dest || !pImu)
+{ /* Try the pointers */
+return 0;
+}
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  //unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+//  imu.accelerometer1.x *= scale;
+//  imu.accelerometer1.y *= scale;
+//  imu.accelerometer1.z *= scale;
+//  imu.gyroscope1.x     *= scale;
+//  imu.gyroscope1.y     *= scale;
+//  imu.gyroscope1.z     *= scale;
+//  imu.magnetometer1.x  *= scale;
+//  imu.magnetometer1.y  *= scale;
+//  imu.magnetometer1.z  *= scale;
+//  imu.accelerometer2.x *= scale;
+//  imu.accelerometer2.y *= scale;
+//  imu.accelerometer2.z *= scale;
+//  imu.gyroscope2.x     *= scale;
+//  imu.gyroscope2.y     *= scale;
+//  imu.gyroscope2.z     *= scale;
+//  imu.magnetometer2.x  *= scale;
+//  imu.magnetometer2.y  *= scale;
+//  imu.magnetometer2.z  *= scale;
+
+  imu.accelerometer1.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer1.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer1.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.gyroscope1.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.gyroscope1.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.gyroscope1.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.magnetometer1.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer1.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer1.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.accelerometer2.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer2.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer2.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.gyroscope2.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.gyroscope2.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.gyroscope2.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
+  imu.magnetometer2.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer2.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer2.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+
+
+  short tmp = 0; /* Temporary variable used for the typecast and shift */
+// in future, use the folowing union
+#if 0
+	union {
+		short tmp;
+		unsigned char bytes[2];
+	} u;
+	memset(&u, 0, sizeof(u));
+#endif
+  tmp = (short) imu.gyroscope1.x;
+  dest[0] =  tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+	  tmp = (short) imu.gyroscope1.y;
+  dest[2] =  tmp >> 8 & 0xFF;
+  dest[3] =  tmp & 0xFF;
+  tmp = (short) imu.gyroscope1.z;
+  dest[4] =  tmp >> 8 & 0xFF;
+  dest[5] =  tmp & 0xFF;
+  tmp = (short) imu.accelerometer1.x;
+  dest[6] =  (tmp >> 8) & 0xFF;
+  dest[7] =  (tmp) & 0xFF;
+  tmp = (short) imu.accelerometer1.y;
+  dest[8] =  (tmp >> 8) & 0xFF;
+  dest[9] =  tmp & 0xFF;
+  tmp = (short) imu.accelerometer1.z;
+  dest[10] = tmp >> 8 & 0xFF;
+  dest[11] = tmp & 0xFF;
+  tmp = (short) imu.magnetometer1.x;
+  dest[12] =  tmp >> 8 & 0xFF;
+  dest[13] =  tmp & 0xFF;
+  tmp = (short) imu.magnetometer1.y;
+  dest[14] =  tmp >> 8 & 0xFF;
+  dest[15] = tmp & 0xFF;
+  tmp = (short) imu.magnetometer1.z;
+  dest[16] = tmp >> 8 & 0xFF;
+  dest[17] = tmp & 0xFF;
+  tmp = (short) imu.gyroscope2.x;
+  dest[18] =  tmp >> 8 & 0xFF;
+  dest[19] = tmp & 0xFF;
+  tmp = (short) imu.gyroscope2.y;
+  dest[20] =  tmp >> 8 & 0xFF;
+  dest[21] =  tmp & 0xFF;
+  tmp = (short) imu.gyroscope2.z;
+  dest[22] =  tmp >> 8 & 0xFF;
+  dest[23] =  tmp & 0xFF;
+  tmp = (short) imu.accelerometer2.x;
+  dest[24] =  (tmp >> 8) & 0xFF;
+  dest[25] =  (tmp) & 0xFF;
+  tmp = (short) imu.accelerometer2.y;
+  dest[26] =  (tmp >> 8) & 0xFF;
+  dest[27] =  tmp & 0xFF;
+  tmp = (short) imu.accelerometer2.z;
+  dest[28] = tmp >> 8 & 0xFF;
+  dest[29] = tmp & 0xFF;
+  tmp = (short) imu.magnetometer2.x;
+  dest[30] =  tmp >> 8 & 0xFF;
+  dest[31] =  tmp & 0xFF;
+  tmp = (short) imu.magnetometer2.y;
+  dest[32] =  tmp >> 8 & 0xFF;
+  dest[33] = tmp & 0xFF;
+  tmp = (short) imu.magnetometer2.z;
+  dest[34] = tmp >> 8 & 0xFF;
+  dest[35] = tmp & 0xFF;
+  return 36;
+}
+
+
+
+
 int datatypeToRaw_usbad_instrument(usbad_data_t *pData, unsigned char *dest)
 {
   if(!dest || !pData)
@@ -1023,148 +1345,148 @@ int datatypeToRaw_usbad_sensor_instrument(usbad_data_t *pData, unsigned char *de
   return 3;
 }
 
-int datatypeToRaw_canDistanceNodeD1(can_distance_node_d1 * pData, unsigned char *dest)
-{
-  if (!dest || !pData)
-  {/* Try the pointers */
-	return 0;
-  }
-  dest[0] = (unsigned char) pData->distance << 8;
-  dest[1] = (unsigned char) pData->distance ;
-  return 2;
-}
-
-int datatypeToRaw_canDistanceNodeD2(can_distance_node_d2 * pData, unsigned char *dest)
-{
-  if (!dest || !pData)
-  { /* Try the pointers */
-	return 0;
-  }
-  dest[0] = (unsigned char) pData->distance << 8;
-  dest[1] = (unsigned char) pData->distance ;
-  return 2;
-}
-
-int datatypeToRaw_canDistanceNodeD3(can_distance_node_d3 * pData, unsigned char *dest)
-{
-  if (!dest || !pData)
-  { /* Try the pointers */
-	return 0;
-  }
-  dest[0] = (unsigned char) pData->calculatedDistance << 8;
-  dest[1] = (unsigned char) pData->calculatedDistance;
-  dest[2] = (unsigned char) pData->distanceUS << 8;
-  dest[3] = (unsigned char) pData->distanceUS;
-  dest[4] = (unsigned char) pData->distanceIR;
-  return 5;
-}
-
-int datatypeToRaw_canDistanceNodeD4(can_distance_node_d4 * pData, unsigned char *dest)
-{
-  if (!dest || !pData)
-  { /* Try the pointers */
-	return 0;
-  }
-  dest[0] = (unsigned char) pData->calculatedDistance << 8;
-  dest[1] = (unsigned char) pData->calculatedDistance;
-  dest[2] = (unsigned char) pData->distanceUS << 8;
-  dest[3] = (unsigned char) pData->distanceUS;
-  dest[4] = (unsigned char) pData->distanceIR1;
-  dest[5] = (unsigned char) pData->distanceIR2;
-#if PRINTF_OPERATIONS_DBG
-  sprintf(string, "%u [operations] [datatypeToRaw_canDistanceNodeD4] [dest 0-7] 0x%2X %2X %2X %2X %2X %2X\n",
-						(unsigned int) HAL_GetTick(), dest[0],dest[1],dest[2],dest[3],dest[4],dest[5]);
-  xQueueSend(pPrintQueue, string, 0);
-#endif
-  return 6;
-}
-
-int datatypeToRaw_canDistanceNodeD5(can_distance_node_d5 * pData, unsigned char *dest)
-{
-  if (!dest || !pData)
-  { /* Try the pointers */
-	return 0;
-  }
-  dest[0] = (unsigned char) pData->calculatedDistance << 8;
-  dest[1] = (unsigned char) pData->calculatedDistance;
-  dest[2] = (unsigned char) pData->distanceUS << 8;
-  dest[3] = (unsigned char) pData->distanceUS;
-  dest[4] = (unsigned char) pData->distanceIR1;
-  dest[5] = (unsigned char) pData->distanceIR2;
-  dest[6] = (unsigned char) pData->distanceIR3;
-  return 7;
-}
-
-int datatypeToRaw_canDistanceNodeD6(can_distance_node_d6 * pData, unsigned char *dest)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	dest[0] = (unsigned char) pData->calculatedDistance << 8;
-	dest[1] = (unsigned char) pData->calculatedDistance;
-	dest[3] = (unsigned char) pData->distanceIR1;
-	dest[4] = (unsigned char) pData->distanceIR2;
-	dest[5] = (unsigned char) pData->distanceIR3;
-	dest[6] = (unsigned char) pData->distanceIR4;
-
-#if PRINTF_OPERATIONS_DBG
-	sprintf(string, "%u [operations] [datatypeToRaw_canDistanceNodeD6] [dest 0-7] 0x%2X %2X %2X %2X %2X %2X\n",
-												(unsigned int) HAL_GetTick(),
-												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5]);
-    xQueueSend(pPrintQueue, string, 0);
-#endif
-
-	return 6;
-}
-
-int datatypeToRaw_canDistanceNodeD7(can_distance_node_d6 * pData, unsigned char *dest)
-{
-	/* Correspond to the can_distance_D6 but with only the calculated data */
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	dest[0] = (unsigned char) (pData->calculatedDistance >> 8);
-	dest[1] = (unsigned char) pData->calculatedDistance;
-
-	return 2;
-}
-
-int datatypeToRaw_canDistanceNodeD8(can_distance_node_d5 * pData, unsigned char * pDest)
-{
-	if(pData == NULL)
-		return 0;
-	if(pDest == NULL)
-		return 0;
-
-	pDest[0] = (unsigned char) (pData->calculatedDistance >> 8);
-	pDest[1] = (unsigned char) pData->calculatedDistance;
-
-	return 2;
-}
-
-int datatypeToRaw_gpsMinData(gps_data_t * pData, unsigned char *dest)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	float_to_byte_array_msb(pData->lon, &dest[0]);
-	float_to_byte_array_msb(pData->lat, &dest[4]);
-	float_to_byte_array_msb(pData->hMSL, &dest[8]);
-	float_to_byte_array_msb(pData->gSpeed, &dest[12]);
-	dest[16] = pData->gnssFixOK;
-
-
-	return 17;
-}
+//int datatypeToRaw_canDistanceNodeD1(can_distance_node_d1 * pData, unsigned char *dest)
+//{
+//  if (!dest || !pData)
+//  {/* Try the pointers */
+//	return 0;
+//  }
+//  dest[0] = (unsigned char) pData->distance << 8;
+//  dest[1] = (unsigned char) pData->distance ;
+//  return 2;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD2(can_distance_node_d2 * pData, unsigned char *dest)
+//{
+//  if (!dest || !pData)
+//  { /* Try the pointers */
+//	return 0;
+//  }
+//  dest[0] = (unsigned char) pData->distance << 8;
+//  dest[1] = (unsigned char) pData->distance ;
+//  return 2;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD3(can_distance_node_d3 * pData, unsigned char *dest)
+//{
+//  if (!dest || !pData)
+//  { /* Try the pointers */
+//	return 0;
+//  }
+//  dest[0] = (unsigned char) pData->calculatedDistance << 8;
+//  dest[1] = (unsigned char) pData->calculatedDistance;
+//  dest[2] = (unsigned char) pData->distanceUS << 8;
+//  dest[3] = (unsigned char) pData->distanceUS;
+//  dest[4] = (unsigned char) pData->distanceIR;
+//  return 5;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD4(can_distance_node_d4 * pData, unsigned char *dest)
+//{
+//  if (!dest || !pData)
+//  { /* Try the pointers */
+//	return 0;
+//  }
+//  dest[0] = (unsigned char) pData->calculatedDistance << 8;
+//  dest[1] = (unsigned char) pData->calculatedDistance;
+//  dest[2] = (unsigned char) pData->distanceUS << 8;
+//  dest[3] = (unsigned char) pData->distanceUS;
+//  dest[4] = (unsigned char) pData->distanceIR1;
+//  dest[5] = (unsigned char) pData->distanceIR2;
+//#if PRINTF_OPERATIONS_DBG
+//  sprintf(string, "%u [operations] [datatypeToRaw_canDistanceNodeD4] [dest 0-7] 0x%2X %2X %2X %2X %2X %2X\n",
+//						(unsigned int) HAL_GetTick(), dest[0],dest[1],dest[2],dest[3],dest[4],dest[5]);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
+//  return 6;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD5(can_distance_node_d5 * pData, unsigned char *dest)
+//{
+//  if (!dest || !pData)
+//  { /* Try the pointers */
+//	return 0;
+//  }
+//  dest[0] = (unsigned char) pData->calculatedDistance << 8;
+//  dest[1] = (unsigned char) pData->calculatedDistance;
+//  dest[2] = (unsigned char) pData->distanceUS << 8;
+//  dest[3] = (unsigned char) pData->distanceUS;
+//  dest[4] = (unsigned char) pData->distanceIR1;
+//  dest[5] = (unsigned char) pData->distanceIR2;
+//  dest[6] = (unsigned char) pData->distanceIR3;
+//  return 7;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD6(can_distance_node_d6 * pData, unsigned char *dest)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	dest[0] = (unsigned char) pData->calculatedDistance << 8;
+//	dest[1] = (unsigned char) pData->calculatedDistance;
+//	dest[3] = (unsigned char) pData->distanceIR1;
+//	dest[4] = (unsigned char) pData->distanceIR2;
+//	dest[5] = (unsigned char) pData->distanceIR3;
+//	dest[6] = (unsigned char) pData->distanceIR4;
+//
+//#if PRINTF_OPERATIONS_DBG
+//	sprintf(string, "%u [operations] [datatypeToRaw_canDistanceNodeD6] [dest 0-7] 0x%2X %2X %2X %2X %2X %2X\n",
+//												(unsigned int) HAL_GetTick(),
+//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5]);
+//    xQueueSend(pPrintQueue, string, 0);
+//#endif
+//
+//	return 6;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD7(can_distance_node_d6 * pData, unsigned char *dest)
+//{
+//	/* Correspond to the can_distance_D6 but with only the calculated data */
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	dest[0] = (unsigned char) (pData->calculatedDistance >> 8);
+//	dest[1] = (unsigned char) pData->calculatedDistance;
+//
+//	return 2;
+//}
+//
+//int datatypeToRaw_canDistanceNodeD8(can_distance_node_d5 * pData, unsigned char * pDest)
+//{
+//	if(pData == NULL)
+//		return 0;
+//	if(pDest == NULL)
+//		return 0;
+//
+//	pDest[0] = (unsigned char) (pData->calculatedDistance >> 8);
+//	pDest[1] = (unsigned char) pData->calculatedDistance;
+//
+//	return 2;
+//}
+//
+//int datatypeToRaw_gpsMinData(gps_data_t * pData, unsigned char *dest)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	float_to_byte_array_msb(pData->lon, &dest[0]);
+//	float_to_byte_array_msb(pData->lat, &dest[4]);
+//	float_to_byte_array_msb(pData->hMSL, &dest[8]);
+//	float_to_byte_array_msb(pData->gSpeed, &dest[12]);
+//	dest[16] = pData->gnssFixOK;
+//
+//
+//	return 17;
+//}
 
 /* The part following is up to date with our protocol's specifications (see https://educat2seas.eu/data/api/setup/parameter/33/info)*/
 int datatypeToAscii_joystick_dx2(unsigned int instrumentType, pwc_data_t * pData, unsigned char *dest, unsigned int lineReturn)
@@ -1341,311 +1663,311 @@ int datatypeToAscii_imu_6axis(unsigned int instrumentType, imu_data_t * pImu, un
 	return 0;
 }
 
-int datatypeToAscii_canDistanceNodeD1(unsigned int instrumentType, can_distance_node_d1 * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd1_MAX_OUTPUT,
-				"CD1,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->distance);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd1_MAX_OUTPUT,
-				"CD1,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->distance);
-
-	}
-	if (elems <=  datatypeToAscii_can_cd1_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
-int datatypeToAscii_canDistanceNodeD2(unsigned int instrumentType, can_distance_node_d2 * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd2_MAX_OUTPUT,
-				"CD2,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->distance);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd2_MAX_OUTPUT,
-				"CD2,%d,%d,%d",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->distance);
-
-	}
-	if (elems <=  datatypeToAscii_can_cd2_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
-
-
-int datatypeToAscii_canDistanceNodeD3(unsigned int instrumentType, can_distance_node_d3 * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	dest[0] = (unsigned char) pData->calculatedDistance << 8;
-	dest[1] = (unsigned char) pData->calculatedDistance;
-	dest[2] = (unsigned char) pData->distanceUS << 8;
-	dest[3] = (unsigned char) pData->distanceUS;
-	dest[4] = (unsigned char) pData->distanceIR;
-
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd3_MAX_OUTPUT,
-				"CD3,%d,%d,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceUS,
-				pData->distanceIR);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd3_MAX_OUTPUT,
-				"CD3,%d,%d,%d,%d,%d",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceUS,
-				pData->distanceIR);
-
-	}
-	if (elems <=  datatypeToAscii_can_cd3_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
-
-int datatypeToAscii_canDistanceNodeD4(unsigned int instrumentType, can_distance_node_d4 * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd4_MAX_OUTPUT,
-				"CD4,%d,%d,%d,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceUS,
-				pData->distanceIR1,
-				pData->distanceIR2);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd4_MAX_OUTPUT,
-				"CD4,%d,%d,%d,%d,%d,%d",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceUS,
-				pData->distanceIR1,
-				pData->distanceIR2);
-	}
-	if (elems <=  datatypeToAscii_can_cd4_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
-
-int datatypeToAscii_canDistanceNodeD5(unsigned int instrumentType, can_distance_node_d5 * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd5_MAX_OUTPUT,
-				"CD5,%d,%d,%d,%d,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceUS,
-				pData->distanceIR1,
-				pData->distanceIR2,
-				pData->distanceIR3);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd5_MAX_OUTPUT,
-				"CD5,%d,%d,%d,%d,%d,%d,%d",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceUS,
-				pData->distanceIR1,
-				pData->distanceIR2,
-				pData->distanceIR3);
-	}
-	if (elems <=  datatypeToAscii_can_cd5_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
-
-
-int datatypeToAscii_canDistanceNodeD6(unsigned int instrumentType, can_distance_node_d6 * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd6_MAX_OUTPUT,
-				"CD6,%d,%d,%d,%d,%d,%d,%d\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceIR1,
-				pData->distanceIR2,
-				pData->distanceIR3,
-				pData->distanceIR4);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_can_cd6_MAX_OUTPUT,
-				"CD6,%d,%d,%d,%d,%d,%d,%d",
-				//imu->timestamp,
-				instrumentType,
-				pData->ID,
-				pData->calculatedDistance,
-				pData->distanceIR1,
-				pData->distanceIR2,
-				pData->distanceIR3,
-				pData->distanceIR4);
-	}
-	if (elems <=  datatypeToAscii_can_cd5_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
-
-
-int datatypeToAscii_gpsMinData(unsigned int instrumentType, gps_data_t * pData, unsigned char *dest, unsigned int lineReturn)
-{
-	/* Try the pointers */
-	if (!dest || !pData)
-	{
-		return 0;
-	}
-
-	unsigned int elems = 0;
-
-	if (lineReturn)
-	{
-		elems = snprintf(dest, datatypeToAscii_gps_minData_MAX_OUTPUT,
-				"GPS,%d,%.8f,%.8f,%.2f,%.2f\n",
-				//imu->timestamp,
-				instrumentType,
-				pData->lon,
-				pData->lat,
-				pData->hMSL,
-				pData->gSpeed);
-
-	}
-	else
-	{
-		elems = snprintf(dest, datatypeToAscii_gps_minData_MAX_OUTPUT,
-				"GPS,%d,%.8f,%.8f,%.2f,%.2f",
-				//imu->timestamp,
-				instrumentType,
-				pData->lon,
-				pData->lat,
-				pData->hMSL,
-				pData->gSpeed);
-	}
-	if (elems <=  datatypeToAscii_gps_minData_MAX_OUTPUT)
-	{
-		return elems;
-	}
-
-	return 0;
-}
+//int datatypeToAscii_canDistanceNodeD1(unsigned int instrumentType, can_distance_node_d1 * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd1_MAX_OUTPUT,
+//				"CD1,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->distance);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd1_MAX_OUTPUT,
+//				"CD1,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->distance);
+//
+//	}
+//	if (elems <=  datatypeToAscii_can_cd1_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
+//int datatypeToAscii_canDistanceNodeD2(unsigned int instrumentType, can_distance_node_d2 * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd2_MAX_OUTPUT,
+//				"CD2,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->distance);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd2_MAX_OUTPUT,
+//				"CD2,%d,%d,%d",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->distance);
+//
+//	}
+//	if (elems <=  datatypeToAscii_can_cd2_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
+//
+//
+//int datatypeToAscii_canDistanceNodeD3(unsigned int instrumentType, can_distance_node_d3 * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	dest[0] = (unsigned char) pData->calculatedDistance << 8;
+//	dest[1] = (unsigned char) pData->calculatedDistance;
+//	dest[2] = (unsigned char) pData->distanceUS << 8;
+//	dest[3] = (unsigned char) pData->distanceUS;
+//	dest[4] = (unsigned char) pData->distanceIR;
+//
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd3_MAX_OUTPUT,
+//				"CD3,%d,%d,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceUS,
+//				pData->distanceIR);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd3_MAX_OUTPUT,
+//				"CD3,%d,%d,%d,%d,%d",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceUS,
+//				pData->distanceIR);
+//
+//	}
+//	if (elems <=  datatypeToAscii_can_cd3_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
+//
+//int datatypeToAscii_canDistanceNodeD4(unsigned int instrumentType, can_distance_node_d4 * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd4_MAX_OUTPUT,
+//				"CD4,%d,%d,%d,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceUS,
+//				pData->distanceIR1,
+//				pData->distanceIR2);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd4_MAX_OUTPUT,
+//				"CD4,%d,%d,%d,%d,%d,%d",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceUS,
+//				pData->distanceIR1,
+//				pData->distanceIR2);
+//	}
+//	if (elems <=  datatypeToAscii_can_cd4_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
+//
+//int datatypeToAscii_canDistanceNodeD5(unsigned int instrumentType, can_distance_node_d5 * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd5_MAX_OUTPUT,
+//				"CD5,%d,%d,%d,%d,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceUS,
+//				pData->distanceIR1,
+//				pData->distanceIR2,
+//				pData->distanceIR3);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd5_MAX_OUTPUT,
+//				"CD5,%d,%d,%d,%d,%d,%d,%d",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceUS,
+//				pData->distanceIR1,
+//				pData->distanceIR2,
+//				pData->distanceIR3);
+//	}
+//	if (elems <=  datatypeToAscii_can_cd5_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
+//
+//
+//int datatypeToAscii_canDistanceNodeD6(unsigned int instrumentType, can_distance_node_d6 * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd6_MAX_OUTPUT,
+//				"CD6,%d,%d,%d,%d,%d,%d,%d\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceIR1,
+//				pData->distanceIR2,
+//				pData->distanceIR3,
+//				pData->distanceIR4);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_can_cd6_MAX_OUTPUT,
+//				"CD6,%d,%d,%d,%d,%d,%d,%d",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->ID,
+//				pData->calculatedDistance,
+//				pData->distanceIR1,
+//				pData->distanceIR2,
+//				pData->distanceIR3,
+//				pData->distanceIR4);
+//	}
+//	if (elems <=  datatypeToAscii_can_cd5_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
+//
+//
+//int datatypeToAscii_gpsMinData(unsigned int instrumentType, gps_data_t * pData, unsigned char *dest, unsigned int lineReturn)
+//{
+//	/* Try the pointers */
+//	if (!dest || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	unsigned int elems = 0;
+//
+//	if (lineReturn)
+//	{
+//		elems = snprintf(dest, datatypeToAscii_gps_minData_MAX_OUTPUT,
+//				"GPS,%d,%.8f,%.8f,%.2f,%.2f\n",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->lon,
+//				pData->lat,
+//				pData->hMSL,
+//				pData->gSpeed);
+//
+//	}
+//	else
+//	{
+//		elems = snprintf(dest, datatypeToAscii_gps_minData_MAX_OUTPUT,
+//				"GPS,%d,%.8f,%.8f,%.2f,%.2f",
+//				//imu->timestamp,
+//				instrumentType,
+//				pData->lon,
+//				pData->lat,
+//				pData->hMSL,
+//				pData->gSpeed);
+//	}
+//	if (elems <=  datatypeToAscii_gps_minData_MAX_OUTPUT)
+//	{
+//		return elems;
+//	}
+//
+//	return 0;
+//}
 
 int rawToStruct_joystick_dx2(unsigned char *source, unsigned int size, unsigned int n_elem, pwc_data_t * pData)
 {
@@ -1776,208 +2098,208 @@ int rawToStruct_imu_6axis(unsigned int * source, unsigned int size, unsigned int
 	return 12;
 }
 
-int rawToStruct_gpsMinData(unsigned char * source, unsigned int size, unsigned int n_elem, gps_data_t * pData)
-{
-	if (!source || !pData)
-	{
-		return 0;
-	}
-
-	pData->lon = bytesarrayToFloat(&source[0]);
-	pData->lat = bytesarrayToFloat(&source[4]);
-	pData->hMSL = bytesarrayToFloat(&source[8]);
-	pData->gSpeed = bytesarrayToFloat(&source[12]);
-	pData->gnssFixOK = source[16];
-
-
-	return 17;
-}
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD1(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d1 d1data;
-	memset(&d1data, 0, sizeof(can_distance_node_d1));
-
-	d1data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d1data.distance = source[0];
-
-	*(can_distance_node_d1*) pData = d1data;
-
-	return 1;
-}
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD2(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d2 d2data;
-	memset(&d2data, 0, sizeof(can_distance_node_d2));
-
-	d2data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d2data.distance = source[0];
-
-	*(can_distance_node_d2*) pData = d2data;
-
-	return 1;
-}
-
-
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD3(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d3 d3data;
-	memset(&d3data, 0, sizeof(can_distance_node_d3));
-
-	d3data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d3data.calculatedDistance = (short) (source[0] << 8) | source[1];
-	d3data.distanceUS = (short) (source[2] << 8) | source[3];
-	d3data.distanceIR = source[4];
-
-	*(can_distance_node_d3*) pData = d3data;
-
-	return 1;
-}
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD4(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d4 d4data;
-	memset(&d4data, 0, sizeof(can_distance_node_d4));
-
-	d4data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d4data.calculatedDistance = (short) (source[0] << 8) | source[1];
-	d4data.distanceUS = (short) (source[2] << 8) | source[3];
-	d4data.distanceIR1 = source[4];
-	d4data.distanceIR2 = source[5];
-
-	*(can_distance_node_d4*) pData = d4data;
-
-	return 1;
-}
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD5(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d5 d5data;
-	memset(&d5data, 0, sizeof(can_distance_node_d5));
-
-	d5data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d5data.calculatedDistance = (short) (source[0] << 8) | source[1];
-	d5data.distanceUS = (short) (source[2] << 8) | source[3];
-	d5data.distanceIR1 = source[4];
-	d5data.distanceIR2 = source[5];
-	d5data.distanceIR3 = source[6];
-
-	*(can_distance_node_d5*) pData = d5data;
-
-	return 1;
-}
-
-/* Converts incoming buffer of bytes to the appropriate structure */
-int rawToStruct_canDistanceNodeD6(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d6 d6data;
-	memset(&d6data, 0, sizeof(can_distance_node_d6));
-
-	d6data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d6data.calculatedDistance = (short) (source[0] << 8) | source[1];
-	d6data.distanceIR1 = source[2];
-	d6data.distanceIR2 = source[3];
-	d6data.distanceIR3 = source[4];
-	d6data.distanceIR4 = source[5];
-
-	*(can_distance_node_d6*) pData = d6data;
-
-	return 1;
-}
-
-int rawToStruct_canDistanceNodeD7(unsigned char *source, unsigned int size, void * pData)
-{
-	/* Try the pointers */
-	if (!source || !pData)
-	{
-		return 0;
-	}
-	can_distance_node_d6 d6data;
-	memset(&d6data, 0, sizeof(can_distance_node_d6));
-
-	d6data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d6data.calculatedDistance = (unsigned short) ((source[0] << 8) | source[1]);
-	d6data.distanceIR1 = source[2];
-	d6data.distanceIR2 = source[3];
-	d6data.distanceIR3 = source[4];
-	d6data.distanceIR4 = source[5];
-
-	*(can_distance_node_d6*) pData = d6data;
-
-	return 1;
-}
-
-int rawToStruct_canDistanceNodeD8(unsigned char * pSource, unsigned int size, void * pData)
-{
-	if(pSource == NULL)
-		return 0;
-	if(pData == NULL)
-		return 0;
-
-	can_distance_node_d5 d5data;
-
-	d5data.timestamp = HAL_GetTick();
-
-	//todo: check size
-	d5data.calculatedDistance = (unsigned short) ((pSource[0] << 8) | pSource[1]);
-	d5data.distanceUS = (unsigned short) ((pSource[2] << 8) | pSource[3]);
-	d5data.distanceIR1 = pSource[4];
-	d5data.distanceIR2 = pSource[5];
-	d5data.distanceIR3 = pSource[6];
-
-	*(can_distance_node_d5 *) pData = d5data;
-
-	return 1;
-}
+//int rawToStruct_gpsMinData(unsigned char * source, unsigned int size, unsigned int n_elem, gps_data_t * pData)
+//{
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//
+//	pData->lon = bytesarrayToFloat(&source[0]);
+//	pData->lat = bytesarrayToFloat(&source[4]);
+//	pData->hMSL = bytesarrayToFloat(&source[8]);
+//	pData->gSpeed = bytesarrayToFloat(&source[12]);
+//	pData->gnssFixOK = source[16];
+//
+//
+//	return 17;
+//}
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD1(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d1 d1data;
+//	memset(&d1data, 0, sizeof(can_distance_node_d1));
+//
+//	d1data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d1data.distance = source[0];
+//
+//	*(can_distance_node_d1*) pData = d1data;
+//
+//	return 1;
+//}
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD2(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d2 d2data;
+//	memset(&d2data, 0, sizeof(can_distance_node_d2));
+//
+//	d2data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d2data.distance = source[0];
+//
+//	*(can_distance_node_d2*) pData = d2data;
+//
+//	return 1;
+//}
+//
+//
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD3(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d3 d3data;
+//	memset(&d3data, 0, sizeof(can_distance_node_d3));
+//
+//	d3data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d3data.calculatedDistance = (short) (source[0] << 8) | source[1];
+//	d3data.distanceUS = (short) (source[2] << 8) | source[3];
+//	d3data.distanceIR = source[4];
+//
+//	*(can_distance_node_d3*) pData = d3data;
+//
+//	return 1;
+//}
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD4(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d4 d4data;
+//	memset(&d4data, 0, sizeof(can_distance_node_d4));
+//
+//	d4data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d4data.calculatedDistance = (short) (source[0] << 8) | source[1];
+//	d4data.distanceUS = (short) (source[2] << 8) | source[3];
+//	d4data.distanceIR1 = source[4];
+//	d4data.distanceIR2 = source[5];
+//
+//	*(can_distance_node_d4*) pData = d4data;
+//
+//	return 1;
+//}
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD5(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d5 d5data;
+//	memset(&d5data, 0, sizeof(can_distance_node_d5));
+//
+//	d5data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d5data.calculatedDistance = (short) (source[0] << 8) | source[1];
+//	d5data.distanceUS = (short) (source[2] << 8) | source[3];
+//	d5data.distanceIR1 = source[4];
+//	d5data.distanceIR2 = source[5];
+//	d5data.distanceIR3 = source[6];
+//
+//	*(can_distance_node_d5*) pData = d5data;
+//
+//	return 1;
+//}
+//
+///* Converts incoming buffer of bytes to the appropriate structure */
+//int rawToStruct_canDistanceNodeD6(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d6 d6data;
+//	memset(&d6data, 0, sizeof(can_distance_node_d6));
+//
+//	d6data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d6data.calculatedDistance = (short) (source[0] << 8) | source[1];
+//	d6data.distanceIR1 = source[2];
+//	d6data.distanceIR2 = source[3];
+//	d6data.distanceIR3 = source[4];
+//	d6data.distanceIR4 = source[5];
+//
+//	*(can_distance_node_d6*) pData = d6data;
+//
+//	return 1;
+//}
+//
+//int rawToStruct_canDistanceNodeD7(unsigned char *source, unsigned int size, void * pData)
+//{
+//	/* Try the pointers */
+//	if (!source || !pData)
+//	{
+//		return 0;
+//	}
+//	can_distance_node_d6 d6data;
+//	memset(&d6data, 0, sizeof(can_distance_node_d6));
+//
+//	d6data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d6data.calculatedDistance = (unsigned short) ((source[0] << 8) | source[1]);
+//	d6data.distanceIR1 = source[2];
+//	d6data.distanceIR2 = source[3];
+//	d6data.distanceIR3 = source[4];
+//	d6data.distanceIR4 = source[5];
+//
+//	*(can_distance_node_d6*) pData = d6data;
+//
+//	return 1;
+//}
+//
+//int rawToStruct_canDistanceNodeD8(unsigned char * pSource, unsigned int size, void * pData)
+//{
+//	if(pSource == NULL)
+//		return 0;
+//	if(pData == NULL)
+//		return 0;
+//
+//	can_distance_node_d5 d5data;
+//
+//	d5data.timestamp = HAL_GetTick();
+//
+//	//todo: check size
+//	d5data.calculatedDistance = (unsigned short) ((pSource[0] << 8) | pSource[1]);
+//	d5data.distanceUS = (unsigned short) ((pSource[2] << 8) | pSource[3]);
+//	d5data.distanceIR1 = pSource[4];
+//	d5data.distanceIR2 = pSource[5];
+//	d5data.distanceIR3 = pSource[6];
+//
+//	*(can_distance_node_d5 *) pData = d5data;
+//
+//	return 1;
+//}
 

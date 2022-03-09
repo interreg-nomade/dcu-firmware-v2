@@ -5,12 +5,12 @@
 #include "task.h"
 #include "semphr.h"
 #include "cmsis_os.h"
-#include "project_config.h"
+#include "../config/project_config.h"
 #include "common.h"
 
 #include "queues/notification/notification_service_queue.h"
 
-#include "data_op/op.h"
+#include "../util/data_op/op.h"
 
 #define 	PRINT_RTOS_TASK_USBAD	0
 

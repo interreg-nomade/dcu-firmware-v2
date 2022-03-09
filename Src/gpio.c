@@ -105,12 +105,39 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : FT312D_ERR */
+  GPIO_InitStruct.Pin = FT312D_ERR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
   /*Configure GPIO pin : STCC_EN_Pin */
   GPIO_InitStruct.Pin = STCC_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(STCC_EN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : STCC_CTL1_Pin */
+  GPIO_InitStruct.Pin = STCC_CTL1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(STCC_CTL1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : STCC_CTL2_Pin */
+  GPIO_InitStruct.Pin = STCC_CTL2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(STCC_CTL2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : STCC_CTL3_Pin */
+  GPIO_InitStruct.Pin = STCC_CTL3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(STCC_CTL3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED_GOOD_Pin LED_ERROR_Pin LED_BUSY_Pin */
   GPIO_InitStruct.Pin = LED_GOOD_Pin|LED_ERROR_Pin|LED_BUSY_Pin;
@@ -132,18 +159,34 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SD_DETECT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : I2C1_INT_Pin */
-  GPIO_InitStruct.Pin = I2C1_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  /*Configure GPIO pins : USER_LED_Pin VDD_BOOST_EN_Pin BQ25300_EN_Pin VDD_FT312D_EN_Pin */
+  GPIO_InitStruct.Pin = VDD_BOOST_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(I2C1_INT_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(VDD_BOOST_EN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : VDD_RTC_EN_Pin */
+  GPIO_InitStruct.Pin = VDD_RTC_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(VDD_RTC_EN_GPIO_Port, &GPIO_InitStruct);
+
+
+
+  /*Configure GPIO pin : I2C1_INT_Pin */
+//  GPIO_InitStruct.Pin = I2C1_INT_Pin;
+//  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  HAL_GPIO_Init(I2C1_INT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI2_IRQn, 1, 0); //was 0 Deze is voor de USER button!
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 1, 0); // was 0 Waarvoor is deze???
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+//  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 1, 0); // was 0 Waarvoor is deze???
+//  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 

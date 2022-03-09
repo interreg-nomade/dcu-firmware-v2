@@ -7,7 +7,7 @@
  */
 #include <string.h>
 #include <stdint.h>
-#include "queues/measurements/measurements_queue.h"
+#include "../measurements/measurements_queue.h"
 
 /* FreeRTOS includes */
 #include "FreeRTOS.h"

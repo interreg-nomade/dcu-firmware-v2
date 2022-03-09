@@ -15,7 +15,7 @@
 /* Includes */
 #include "stdint.h"
 #include "fatfs.h"  /* File system */
-#include "config/raw.h" /* EDUCAT Configuration API is required */
+#include "../../app/config/raw.h" /* EDUCAT Configuration API is required */
 #include <stdbool.h>
 
 #define RAM_PLACEMENT __attribute__((section(".sd_objects")))

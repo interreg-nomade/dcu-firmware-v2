@@ -24,7 +24,7 @@
 #include "defines.h"
 
 #include "usart.h"
-#include "app_init.h" // to declare QueueHandle_t
+#include "../../app/app_init.h" // to declare QueueHandle_t
 
 #define PRINTF_STREAMING_UPLINK_DBG 1
 

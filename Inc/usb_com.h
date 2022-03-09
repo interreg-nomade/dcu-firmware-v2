@@ -30,7 +30,7 @@
 #include "imu_com.h"
 #include "sd_card_com.h"
 
-extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef huart7;
 
 void USB_COM_show_menu(void);
 /*-------------------------------------------------------------------------------------------------*/

@@ -1,2 +1,1 @@
-# dcu-firmware-v2
-
+# educat-mainboard-v3-firmware

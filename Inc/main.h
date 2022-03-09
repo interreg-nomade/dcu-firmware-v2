@@ -97,6 +97,7 @@ void Error_Handler(void);
 
 #define TICKPRIORITY     				 		1
 
+#define NRF52_BAUDRATE							1000000
 #define BT_BAUDRATE								115200
 #define COM_BAUDRATE							2000000 //921600
 #define SIZE_TERMINAL_PACKET 					1
@@ -104,15 +105,17 @@ void Error_Handler(void);
 #define SIZE_TABLET_PACKET						11
 
 #define NUMBER_OF_BT_PACKETS					1 // 2
+#define NUMBER_OF_nRF52_PACKETS					1 // 2
 
 #define PACKET_START_POS						11
-#define NUMBER_OF_DATA_READS_IN_BT_PACKET		10
+#define NUMBER_OF_DATA_READS_IN_BT_PACKET	10
+#define NUMBER_OF_DATA_READS_IN_nRF52_PACKET	10
 #define SIZE_SAMPLE_FRAME						8
 #define SIZE_CHECKSUM							1
 #define SIZE_BT_PACKET							92 //PACKET_START_POS + NUMBER_OF_DATA_READS_IN_BT_PACKET * SIZE_SAMPLE_FRAME + SIZE_CHECKSUM  //92
 #define SIZE_PING_PONG_BUFFER					SIZE_BT_PACKET * NUMBER_OF_BT_PACKETS
 #define SIZE_SD_CARD_READ_BUF					NUMBER_OF_BT_PACKETS * NUMBER_OF_DATA_READS_IN_BT_PACKET
-#define NUMBER_OF_SENSOR_SLOTS					1
+#define NUMBER_OF_SENSOR_SLOTS					8
 
 
 #define I2C_ADDRESS_IC5_DATASHEET 	0x38
@@ -156,14 +159,35 @@ void Error_Handler(void);
 #define USER_BUTTON_GPIO_Port GPIOF			// PF2
 #define USER_BUTTON_EXTI_IRQn EXTI2_IRQn	// PF2 EXTI2_IRQn
 
-#define STCC_CHARGING_Pin GPIO_PIN_3		// PF3
-#define STCC_CHARGING_GPIO_Port GPIOF		// PF3
+//#define STCC_CHARGING_Pin GPIO_PIN_3		// PF3 old dcu
+//#define STCC_CHARGING_GPIO_Port GPIOF		// PF3 old dcu
 
-#define STCC_FAULT_Pin GPIO_PIN_4			// PF4
-#define STCC_FAULT_GPIO_Port GPIOF			// PF4
+#define STCC_CHARGING_Pin GPIO_PIN_1		// PF1
+#define STCC_CHARGING_GPIO_Port GPIOF		// PF1
 
-#define STCC_EN_Pin GPIO_PIN_5				// PF5
-#define STCC_EN_GPIO_Port GPIOF				// PF5
+#define FT312D_ERR_Pin GPIO_PIN_10   		// PD10
+#define FT312D_ERR_GPIO_Port GPIOD		    // PD10
+
+//#define STCC_FAULT_Pin GPIO_PIN_4			// PF4 old dcu
+//#define STCC_FAULT_GPIO_Port GPIOF		// PF4 old dcu
+
+#define STCC_FAULT_Pin GPIO_PIN_2			// PF2
+#define STCC_FAULT_GPIO_Port GPIOF			// PF2
+
+//#define STCC_EN_Pin GPIO_PIN_5			// PF5 old dcu
+//#define STCC_EN_GPIO_Port GPIOF			// PF5 old dcu
+
+#define STCC_EN_Pin GPIO_PIN_5				// PE5
+#define STCC_EN_GPIO_Port GPIOE				// PE5
+
+#define STCC_CTL1_Pin GPIO_PIN_2		    // PE2
+#define STCC_CTL1_GPIO_Port GPIOE			// PE2
+
+#define STCC_CTL2_Pin GPIO_PIN_3		    // PE3
+#define STCC_CTL2_GPIO_Port GPIOE			// PE3
+
+#define STCC_CTL3_Pin GPIO_PIN_4		    // PE4
+#define STCC_CTL3_GPIO_Port GPIOE			// PE4
 
 #define LED_GOOD_Pin GPIO_PIN_0				// PB0
 #define LED_GOOD_GPIO_Port GPIOB			// PB0
@@ -177,12 +201,18 @@ void Error_Handler(void);
 #define SD_DETECT_Pin GPIO_PIN_9			// PA9
 #define SD_DETECT_GPIO_Port GPIOA			// PA9
 
-#define I2C1_INT_Pin GPIO_PIN_5				// PB5
-#define I2C1_INT_GPIO_Port GPIOB			// PB5
-#define I2C1_INT_EXTI_IRQn EXTI9_5_IRQn		// PB5 EXTI9_5_IRQn
+//#define I2C1_INT_Pin GPIO_PIN_5				// PB5
+//#define I2C1_INT_GPIO_Port GPIOB			// PB5
+//#define I2C1_INT_EXTI_IRQn EXTI9_5_IRQn		// PB5 EXTI9_5_IRQn
+
+#define VDD_BOOST_EN_Pin GPIO_PIN_5         // PB5
+#define VDD_BOOST_EN_GPIO_Port GPIOB        // PB5
 
 #define LED_BUSY_Pin GPIO_PIN_7				// PB7
 #define LED_BUSY_GPIO_Port GPIOB			// PB7
+
+#define VDD_RTC_EN_Pin GPIO_PIN_15          // PG15
+#define VDD_RTC_EN_GPIO_Port GPIOG          // PG15
 
 
 

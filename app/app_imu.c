@@ -17,16 +17,17 @@
 #include "semphr.h"
 #include "cmsis_os.h"
 #include "usart.h"
+#include "imu_com.h"
 
 #include "app_imu.h"
-#include "bno080-driver/sh2.h"
-#include "bno080-driver/sh2_err.h"
-#include "bno080-driver/sh2_SensorValue.h"
+#include "../lib/bno080-driver/sh2.h"
+#include "../lib/bno080-driver/sh2_err.h"
+#include "../lib/bno080-driver/sh2_SensorValue.h"
 
 // Sensor Application
 #include "common.h"
 
-#include "project_config.h"
+#include "../config/project_config.h"
 
 
 #define USING_CONF_IMU 				1
@@ -89,10 +90,24 @@ QueueHandle_t eventQueue;
 
 static osThreadId imuTaskHandle;
 static instrument_config_t * pImuInstrument;
+//!static instrument_config_t * pImuInstrument[7];
 
 extern void sh2_hal_init(void);
 extern char string[];
 extern QueueHandle_t pPrintQueue;
+
+
+extern imu_module imu_1;
+extern imu_module imu_2;
+extern imu_module imu_3;
+extern imu_module imu_4;
+extern imu_module imu_5;
+extern imu_module imu_6;
+extern imu_module imu_7;
+extern imu_module imu_8;
+
+extern imu_module *imu_array [];
+
 
 
 void imu_task_init()
@@ -173,37 +188,32 @@ static void imuTask(const void * params)
 	    xQueueSend(pPrintQueue, string, 0);
 #endif
 
-
-//#if PRINTF_APP_IMU_DBG
-//		sprintf(string, "%u [APP_IMU] [imuTask] Received sensorEvent data: real= %f, i= %f, j= %f, k= %f.\n",
-//				(unsigned int) HAL_GetTick(),
-//				sensorEvent.rotVectors.real,
-//				sensorEvent.rotVectors.i,
-//				sensorEvent.rotVectors.j,
-//				sensorEvent.rotVectors.k);
-//	    xQueueSend(pPrintQueue, string, 0);
-//#endif
 			refreshImuData(&sensorEvent, &resImuData);
+//			sprintf(string, "%u [APP_IMU] [imuTask] Received sensorEvent data for module %01X: %04X %04X %04X %04X - %04X %04X %04X - %04X %04X %04X\n",
+//					(unsigned int) HAL_GetTick(),
+//					(unsigned int) sensorEvent.module,
+//					(unsigned int) sensorEvent.rotVectors1.real,
+//					(unsigned int) sensorEvent.rotVectors1.i,
+//					(unsigned int) sensorEvent.rotVectors1.j,
+//					(unsigned int) sensorEvent.rotVectors1.k,
+//					(unsigned int) sensorEvent.gyroscope1.x,
+//					(unsigned int) sensorEvent.gyroscope1.y,
+//					(unsigned int) sensorEvent.gyroscope1.z,
+//					(unsigned int) sensorEvent.accelerometer1.x,
+//					(unsigned int) sensorEvent.accelerometer1.y,
+//					(unsigned int) sensorEvent.accelerometer1.z);
+//		    xQueueSend(pPrintQueue, string, 0);
 
 			/* Copy the actual  IMU data to the structure that will be queued by reference */
 			/* Time to stream a message */
 			if (pImuInstrument) //TODO: Logic AND config still correct
+//!			if (pImuInstrument[imu_array[sensorEvent.module]->instrument]) //TODO: Logic AND config still correct
 			{
 				imu_100Hz_data_t * pData 	= NULL;
 				pData 				= (imu_100Hz_data_t*) pImuInstrument->data;
+//!				pData 				= (imu_100Hz_data_t*) pImuInstrument[imu_array[sensorEvent.module]->instrument]->data;
 				*pData 				= resImuData;
-#if 0
-				printf("\e[1;1H\e[2J");
-				printf("ax : %.2f\n", resImuData.accelerometer.x);
-				printf("ay : %.2f\n", resImuData.accelerometer.y);
-				printf("az : %.2f\n", resImuData.accelerometer.z);
-				printf("gx : %.2f\n", resImuData.gyroscope.x);
-				printf("gy : %.2f\n", resImuData.gyroscope.y);
-				printf("gz : %.2f\n", resImuData.gyroscope.z);
-				printf("mx : %.2f\n", resImuData.magnetometer.x);
-				printf("my : %.2f\n", resImuData.magnetometer.y);
-				printf("mz : %.2f\n", resImuData.magnetometer.z);
-#endif
+
 			}
 			previousQueuing = xTaskGetTickCount();
 		}
@@ -730,7 +740,7 @@ static void refreshImuData(const imu_100Hz_data_t *sensorEvent, imu_100Hz_data_t
 void IMU_Config_Init()
 {
 	CONFIG_WAITING_FOR_DECODE(); /* Block on this line untill a configuration is decoded and valid */
-
+    //int m = 0;
 	/* Get number of IMU instrument from config */
 //	int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_IMU);
 	int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_BT);
@@ -746,7 +756,11 @@ void IMU_Config_Init()
 		 * the decodedConfig struct */
 		//		n =  getInstrumentFromConfig(&decodedConfig.conf, (instrument_config_t *)&pImuInstrument, SETUP_PRM_COMM_METHOD_IMU);
 //		n =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument, SETUP_PRM_COMM_METHOD_IMU);
-		n =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument, SETUP_PRM_COMM_METHOD_BT);
+//!	    for (uint8_t i = 0; i < n; i++ )
+//!	    {
+			n =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument, SETUP_PRM_COMM_METHOD_BT);
+//!			m =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument[i], SETUP_PRM_COMM_METHOD_BT, imu_array[i]->instrument);
+//!	    }
 
 //		if (n == 1)
 //		{

@@ -12,7 +12,7 @@
 #define APP_IMU_H_
 
 
-#include <data/structures.h>
+#include "data/structures.h"
 
 /* Call this function to init the IMU Task and start it */
 void imu_task_init(void);

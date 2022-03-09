@@ -12,9 +12,12 @@
 #include "../lib/ring_buffer/ringbuffer_char.h"
 #include <string.h>
 #include "../Inc/usb_com.h"
-#include "interface_sd.h"
+#include "../pinterface/interface_sd.h"
 #include "../Inc/imu_com.h"
 #include "app_rtc.h"
+#include "../Inc/nRF52_driver.h"
+#include "app_nRF52_com.h"
+#include "common.h"
 
 #define PRINTF_TERMINAL_COM 1
 
@@ -31,8 +34,13 @@ extern imu_module imu_3;
 extern imu_module imu_4;
 extern imu_module imu_5;
 extern imu_module imu_6;
+extern imu_module imu_7;
+extern imu_module imu_8;
+
 
 extern imu_module *imu_array [];
+
+extern dcu_conn_dev_t mac_addr[8];
 
 extern Status_SD SD_Status;
 
@@ -71,7 +79,7 @@ void com_init_rx_task(void)
 
 #if PRINTF_TERMINAL_COM
     sprintf(string, "terminal_com_init_rx_task done. \n");
-    HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
+    HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
 #endif
 
     memset(&ComRxMsg, 0, sizeof(com_msg_t));
@@ -90,10 +98,10 @@ void terminalComManagerThread(const void *params)
 	{
 		if (com_Build())
 		{
-#if PRINTF_TERMINAL_COM
-			sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Data received via Terminal: 0x%2X\n",(unsigned int) HAL_GetTick(),command);
-    	      xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if PRINTF_TERMINAL_COM
+//			sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Data received via Terminal: 0x%2X\n",(unsigned int) HAL_GetTick(),command);
+//    	      xQueueSend(pPrintQueue, string, 0);
+//#endif
 			if(command == 0x0A) return;
 			if(previous_command != 0)
 			{
@@ -101,47 +109,47 @@ void terminalComManagerThread(const void *params)
 				{
 					case 0x31: // "1"
 					{
-						imu = &imu_1;
+						//imu = &imu_1;
 						if (0x66 == previous_command)
 						{
-							send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_10HZ);
+							//send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_10HZ);
 						}
 					} break;
 					case 0x32: // "2"
 					{
-						imu = &imu_2;
+						//imu = &imu_2;
 						if (0x66 == previous_command)
 						{
-							send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_20HZ);
+							//send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_20HZ);
 						}
 					} break;
 					case 0x33: // "3"
 					{
-						imu = &imu_3;
+						//imu = &imu_3;
 						if(0x66 == previous_command)
 						{
-							send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_25HZ);
+							//send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_25HZ);
 						}
 					} break;
 					case 0x34: // "4"
 					{
-						imu = &imu_4;
+						//imu = &imu_4;
 						if(0x66 == previous_command)
 						{
-							send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_50HZ);
+							//send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_50HZ);
 						}
 					} break;
 					case 0x35: // "5"
 					{
-						imu = &imu_5;
+						//imu = &imu_5;
 						if(0x66 == previous_command)
 						{
-							send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_100HZ);
+							//send_to_all_sensors_with_param(IMU_change_sampling_frequency, *imu_array, SAMPLING_FREQ_100HZ);
 						}
 					} break;
 					case 0x36: // "6"
 					{
-						imu = &imu_6;
+						//imu = &imu_6;
 					} break;
 					default:
 						imu = NULL;
@@ -158,288 +166,305 @@ void terminalComManagerThread(const void *params)
 					USB_COM_show_menu();
 				}
 				break;
-				case 0x31: // "1": Connect
+				case 0x31: // "1": Send connected device list to nRF52
 				{
-					if(imu != NULL)
-					{
-						sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Connect IMU 0x%1X with MAC Address 0x%2X.\n",(unsigned int) HAL_GetTick(),imu->number,*imu->mac_address);
-			      	    xQueueSend(pPrintQueue, string, 0);
-						IMU_connect(imu);
-						imu = NULL;
-					}
-					else
-					{
-						previous_command = 0x31;
-						sprintf(string, "IMU number: \n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
-				}
-				break;
-				case 0x32:  // "2": Disconnect
-				{
-					if(imu != NULL)
-					{
-						IMU_disconnect(imu);
-						imu = NULL;
-					}
-					else
-					{
-						previous_command = 0x32;
-						sprintf(string, "IMU number: ");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
-				}
-				break;
-				case 0x33: // "3" Go to sleep
-				{
-					if(imu != NULL)
-					{
-						IMU_go_to_sleep(imu);
-						imu = NULL;
-					}
-					else
-					{
-						previous_command = 0x33;
-						sprintf(string, "IMU number: ");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
-//					for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Send connected device list to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_set_mac_addr(mac_addr,sizeof(mac_addr));
+//					if(imu != NULL)
 //					{
-//						if(imu_array[i]->connected)	IMU_go_to_sleep(imu_array[i]);
+//						sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Connect IMU 0x%1X with MAC Address 0x%2X.\n",(unsigned int) HAL_GetTick(),imu->number,*imu->mac_address);
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//						IMU_connect(imu);
+//						imu = NULL;
+//					}
+//					else
+//					{
+//						previous_command = 0x31;
+//						sprintf(string, "IMU number: \n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
 //					}
 				}
 				break;
-				case 0x34:  //"4": Get the battery voltage
+				case 0x32:  // "2": Request connected device list to nRF52
 				{
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request connected device list to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+		      	    comm_req_conn_dev();
+//					if(imu != NULL)
+//					{
+//						IMU_disconnect(imu);
+//						imu = NULL;
+//					}
+//					else
+//					{
+//						previous_command = 0x32;
+//						sprintf(string, "IMU number: ");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+				}
+				break;
+				case 0x33: // "3" Request to start measurement to nRF52
+				{
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request to start measurement to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_start_meas();
+//					if(imu != NULL)
+//					{
+//						IMU_go_to_sleep(imu);
+//						imu = NULL;
+//					}
+//					else
+//					{
+//						previous_command = 0x33;
+//						sprintf(string, "IMU number: ");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+////					for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
+////					{
+////						if(imu_array[i]->connected)	IMU_go_to_sleep(imu_array[i]);
+////					}
+				}
+				break;
+				case 0x34:  //"4": Request to stop measurement to nRF52
+				{
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request to stop measurement to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+		      	    comm_stop_meas();
 //					for(uint8_t i = 0; i < 6; i++)
 //					{
 //						if(imu_array[i]->connected)	IMU_get_battery_voltage(imu_array[i]);
 //					}
-					IMU_get_battery_voltage(&imu_1);
+					//IMU_get_battery_voltage(&imu_1);
 				}
 				break;
-				case 0x35:  //"5": Get the system tick
+				case 0x35:  //"5": Send output data type for all modules to nRF52
 				{
-					compare_RTCunixtime_Epoch();
-					for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
-					{
-						if(imu_array[i]->connected)	IMU_get_systicks(imu_array[i]);
-					}
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Send output data type for all modules to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_set_data_type(COMM_CMD_MEAS_QUAT6);
+					//compare_RTCunixtime_Epoch();
+					//for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
+					//{
+					//	if(imu_array[i]->connected)	IMU_get_systicks(imu_array[i]);
+					//}
 				}
 				break;
-				case 0x36:  //"6": Print MAC addresses to which the BLE slots should connect
+				case 0x36:  //"6": Request to start synchronization to nRF52
 				{
-					for (uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
-					{
-						USB_COM_print_buffer_mac_address(imu_array[i]->name, imu_array[i]->mac_address);
-					}
-				}
-				case 0x37:  //"7": Get synchronization time
-				{
-					for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
-					{
-						if(imu_array[i]->connected)	IMU_get_sync_time(imu_array[i]);
-					}
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request to start synchronization to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_set_sync(COMM_CMD_START_SYNC);
 				}
 				break;
-				case 0x38:  //"8": IMU adapt synchronization
+				case 0x37:  //"7": Request to stop synchronization to nRF52
 				{
-					IMU_synchronisation_adaptation(*imu_array);
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request to stop synchronization to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_set_sync(COMM_CMD_STOP_SYNC);
 				}
 				break;
-				case 0x39:  //"9": Change MAC address of a BLE slot
+				case 0x38:  //"8": Request calibration of connected modules to nRF52
 				{
-					if(imu != NULL)
-					{
-						read_mac_address(imu);
-						imu = NULL;
-					}
-					else
-					{
-						previous_command = 0x39;
-						sprintf(string, "Slot number: ");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request calibration of connected modules to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_calibrate();
+					//IMU_synchronisation_adaptation(*imu_array);
 				}
 				break;
-				case 0x73: //"s": Start synchronization
+				case 0x39:  //"9": Reset nRF52 - not implemented
 				{
-					for(uint8_t i = 0; i < 6; i++)
-					{
-						if(imu_array[i]->connected)
-						{
-							IMU_start_synchronisation(imu_array[i]);
-							previous_connected_modules [i] = 1;
-						}
-					}
-					IMU_send_adv_msg_wrong(&imu_1);
-					osDelay(250);
-					IMU_send_adv_msg(&imu_1);
-//					last_sync_started_time = HAL_GetTick();
-//					for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
+//					if(imu != NULL)
 //					{
-//						if(imu_array[i]->connected)
-//						{
-//							IMU_start_synchronisation(imu_array[i]);
-//							previous_connected_modules [i] = 1;
-//						}
+//						read_mac_address(imu);
+//						imu = NULL;
 //					}
-//					IMU_sync_reset();
-//					HAL_Delay(10);
-//					sync_enable = 1;
-//					IMU_send_adv_msg_wrong(&imu_1);
-				}
-				break;
-				case 0x63:  // "c": Calibration
-				{
-//					for(uint8_t i = 0; i < 6; i++)
+//					else
 //					{
-//						if(imu_array[i]->connected)	IMU_start_calibration(imu_array[i]);
+//						previous_command = 0x39;
+//						sprintf(string, "Slot number: ");
+//			      	    xQueueSend(pPrintQueue, string, 0);
 //					}
-					IMU_start_calibration(&imu_1);
-//					send_to_all_sensors(IMU_start_calibration, *imu_array);
 				}
 				break;
-				case 0x64:  // "d": get time & date
+				case 0x61: // "a": Request battery level of connected modules to nRF52
 				{
-					app_rtc_print_RTCdateTime();
+#if PRINTF_TERMINAL_COM
+				    sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Request battery level of connected modules to nRF52.\n",(unsigned int) HAL_GetTick());
+		      	    xQueueSend(pPrintQueue, string, 0);
+#endif
+					comm_req_batt_lvl();
+					//send_to_all_sensors(IMU_get_status, *imu_array);
 				}
 				break;
-				case 0x6E: // "n": SD card function - Create new file
+//				case 0x63:  // "c": Calibration
+//				{
+////					for(uint8_t i = 0; i < 6; i++)
+////					{
+////						if(imu_array[i]->connected)	IMU_start_calibration(imu_array[i]);
+////					}
+//					//IMU_start_calibration(&imu_1);
+////					send_to_all_sensors(IMU_start_calibration, *imu_array);
+//				}
+//				break;
+//				case 0x64:  // "d": get time & date
+//				{
+//					app_rtc_print_RTCdateTime();
+//				}
+//				break;
+//				case 0x6E: // "n": SD card function - Create new file
+//				{
+//					if (!is_measuring())
+//					{
+//						SD_CARD_COM_create_new_file();
+//					}
+//					else
+//					{
+//						sprintf(string, "Measurement ongoing. End measurement first before generating a new file.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+//				}
+//				break;
+				case 0x6D: // "m": show overview of module library
 				{
-					if (!is_measuring())
-					{
-						SD_CARD_COM_create_new_file();
-					}
-					else
-					{
-						sprintf(string, "Measurement ongoing. End measurement first before generating a new file.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
+				  module_status_overview();
 				}
 				break;
-				case 0x6D: // "m": SD card function - Mount SD card
-				{
-					SD_CARD_COM_mount();
-				}
-				break;
-				case 0x75: // "u": SD card function - Unmount SD card
-				{
-					if (!is_measuring())
-					{
-						SD_CARD_COM_unmount();
-					}
-					else
-					{
-						sprintf(string, "Measurement ongoing. End measurement first before un-mounting the SD Card.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
-				}
-				break;
+//				case 0x75: // "u": SD card function - Unmount SD card
+//				{
+//					if (!is_measuring())
+//					{
+//						SD_CARD_COM_unmount();
+//					}
+//					else
+//					{
+//						sprintf(string, "Measurement ongoing. End measurement first before un-mounting the SD Card.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+//				}
+//				break;
 				case 0x66: // "f": Change sampling frequency
 				{
-					if(imu != NULL)
-					{
-						imu = NULL;
-					}
-					else
-					{
-						previous_command = 0x66;
-						USB_COM_change_frequency_menu();
-						sprintf(string, "Give number: ");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
+					comm_set_frequency(50);
 				}
-				break;
-				case 0x72: // "r": Start the measurement with synchronization
-				{
-					if(SD_Status.status == SD_MOUNTED)
-					{
-						sprintf(string, "Start measurement.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-						SD_CARD_COM_open_file();
-						IMU_start_measurements(&imu_1);
-					}
-					else
-					{
-						sprintf(string, "Measurements not started, SD card not available.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
-				}
-				break;
-				case 0x74: // "t": Start the measurement without synchronization
-				{
-					if(SD_Status.status == SD_MOUNTED)
-					{
-						sprintf(string, "Start measurement.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-						SD_CARD_COM_open_file();
-						IMU_start_measurements_without_sync(&imu_1);
-					}
-					else
-					{
-						sprintf(string, "No available SD card found.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-					}
-				}
-				break;
-				case 0x65:  // "e": End the measurement
-				{
-					if(is_measuring())
-					{
-//						sprintf(string, "End the measurement.");
-//						HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
-//						SD_CARD_COM_close_file();
-						IMU_stop_measurements(&imu_1);
-					}
-					else
-					{
-						sprintf(string, "Start a measurement first.\n");
-			      	    xQueueSend(pPrintQueue, string, 0);
-						IMU_stop_measurements(&imu_1);
 
-					}
 
-				}
-				break;
-				case 0x67: // "g": Change data format - Only Quaternion data
-				{
-					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_1);
-				}
-				break;
-				case 0x68: // "h": Change data format - Only Gyroscope data
-				{
-					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_2);
-				}
-				break;
-				case 0x6A: // "j": Change data format - Only Accelerometer data
-				{
-					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_3);
-				}
-				break;
-				case 0x6B: // "k": Change data format - Gyroscope + Accelerometer data
-				{
-					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_4);
-				}
-				break;
-				case 0x6C: // "l": Change data format - Quaternion + Gyroscope + Accelerometer data
-				{
-					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_5);
-				}
-				break;
-				case 0x61: // "a": Get the IMU module status
-				{
-					send_to_all_sensors(IMU_get_status, *imu_array);
-				}
-				break;
-				case 0x7A: // "z": Get the IMU module software version
-				{
-					send_to_all_sensors(IMU_get_software_version, *imu_array);
-				}
-				break;
+
+//				case 0x66: // "f": Change sampling frequency
+//				{
+//					if(imu != NULL)
+//					{
+//						imu = NULL;
+//					}
+//					else
+//					{
+//						previous_command = 0x66;
+//						USB_COM_change_frequency_menu();
+//						sprintf(string, "Give number: ");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+//				}
+//				break;
+//				case 0x72: // "r": Start the measurement with synchronization
+//				{
+//					if(SD_Status.status == SD_MOUNTED)
+//					{
+//						sprintf(string, "Start measurement.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//						SD_CARD_COM_open_file();
+//						IMU_start_measurements(&imu_1);
+//					}
+//					else
+//					{
+//						sprintf(string, "Measurements not started, SD card not available.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+//				}
+//				break;
+//				case 0x74: // "t": Start the measurement without synchronization
+//				{
+//					if(SD_Status.status == SD_MOUNTED)
+//					{
+//						sprintf(string, "Start measurement.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//						SD_CARD_COM_open_file();
+//						IMU_start_measurements_without_sync(&imu_1);
+//					}
+//					else
+//					{
+//						sprintf(string, "No available SD card found.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//					}
+//				}
+//				break;
+//				case 0x65:  // "e": End the measurement
+//				{
+//					if(is_measuring())
+//					{
+////						sprintf(string, "End the measurement.");
+////						HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
+////						SD_CARD_COM_close_file();
+//						IMU_stop_measurements(&imu_1);
+//					}
+//					else
+//					{
+//						sprintf(string, "Start a measurement first.\n");
+//			      	    xQueueSend(pPrintQueue, string, 0);
+//						IMU_stop_measurements(&imu_1);
+//
+//					}
+//
+//				}
+//				break;
+//				case 0x67: // "g": Change data format - Only Quaternion data
+//				{
+//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_1);
+//				}
+//				break;
+//				case 0x68: // "h": Change data format - Only Gyroscope data
+//				{
+//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_2);
+//				}
+//				break;
+//				case 0x6A: // "j": Change data format - Only Accelerometer data
+//				{
+//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_3);
+//				}
+//				break;
+//				case 0x6B: // "k": Change data format - Gyroscope + Accelerometer data
+//				{
+//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_4);
+//				}
+//				break;
+//				case 0x6C: // "l": Change data format - Quaternion + Gyroscope + Accelerometer data
+//				{
+//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_5);
+//				}
+//				break;
+//				case 0x7A: // "z": Get the IMU module software version
+//				{
+//					send_to_all_sensors(IMU_get_software_version, *imu_array);
+//				}
+//				break;
 				case 0x0A: //"<ENTER>"
 				{
-					// It's just an enter (captered)
+					// It's just an enter (captured)
 				}
 				break;
 				default:
@@ -468,17 +493,17 @@ static int com_Build()
     char rxdByte;
 	if (!ring_buffer_is_empty(&comRingbufRx))
     {
-#if PRINTF_TERMINAL_COM
-		sprintf(string, "%u [app_terminal_com] [com_Build] Terminal ring buffer not empty.\n",(unsigned int) HAL_GetTick());
-  	    xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if PRINTF_TERMINAL_COM
+//		sprintf(string, "%u [app_terminal_com] [com_Build] Terminal ring buffer not empty.\n",(unsigned int) HAL_GetTick());
+//  	    xQueueSend(pPrintQueue, string, 0);
+//#endif
 		if (!ring_buffer_is_empty(&comRingbufRx))
 	    {
 	        ring_buffer_dequeue(&comRingbufRx, &rxdByte);
-#if PRINTF_TERMINAL_COM
-		sprintf(string, "%u [app_terminal_com] [com_Build] Received byte: 0x%2X %c\n",(unsigned int) HAL_GetTick(),rxdByte,rxdByte);
-  	    xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if PRINTF_TERMINAL_COM
+//		sprintf(string, "%u [app_terminal_com] [com_Build] Received byte: 0x%2X %c\n",(unsigned int) HAL_GetTick(),rxdByte,rxdByte);
+//  	    xQueueSend(pPrintQueue, string, 0);
+//#endif
 	    }
 	    command = rxdByte;
         return 1;
@@ -543,8 +568,8 @@ void read_mac_address(imu_module *imu){
 
 	for(uint8_t i = 0; i < 6; i++){
 		uint8_t a, b;
-		if(UART_IsDataAvailable(&huart5))	a = UART_COM_read(&huart5);
-		if(UART_IsDataAvailable(&huart5))	b = UART_COM_read(&huart5);
+		if(UART_IsDataAvailable(&huart7))	a = UART_COM_read(&huart7);
+		if(UART_IsDataAvailable(&huart7))	b = UART_COM_read(&huart7);
 		new_mac_adress [i] = convert_ASCII_to_HEX(a, b);
 	}
 
@@ -589,6 +614,131 @@ uint8_t convert_ASCII_to_HEX(uint8_t msn, uint8_t lsn)
 		}
 	}
 	return a;
+}
+
+void module_status_overview(void)
+{
+  // print imu_array:
+  char DUString[3];
+  xQueueSend(pPrintQueue, "    Module   | Instr |  Mac_address | Connected | Sample f | SR given | Cal | meas | bat (V) | sync time |                   output data type", 0);
+  xQueueSend(pPrintQueue, "                   | ODT given\n", 0);
+  xQueueSend(pPrintQueue, "-------------+-------+--------------+-----------+----------+----------+-----+------+---------+-----------+-----------------------------------", 0);
+  xQueueSend(pPrintQueue, "-------------------+----------\n", 0);
+  // example:              BLE module 1 | C6.D8.42.14.35.E8 |     no    |    50Hz  |     no   |  no |  no  |    ?    |    ?      | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |     no
+  for (int i = 0; i < 8; i++)
+  {
+	if (imu_array[i]->macAddressAvailable)
+	{
+	  sprintf(string, "%s |   %02X  | ", imu_array[i]->name, imu_array[i]->instrument);
+      for (int j = 5; j >= 0; j--)
+      {
+        if (strlen(string) < 147)
+        {
+  	   	  sprintf(DUString, "%02X",imu_array[i]->mac_address[j]);
+  	   	  strcat(string, DUString);
+        }
+      }
+      xQueueSend(pPrintQueue, string, 0);
+      if (imu_array[i]->connected)
+      {//                 |     no    |    50Hz  |
+  	    sprintf(string, " |    yes    |  %3.0dHz   |", imu_array[i]->sampleFrequency);
+      }
+      else
+      {
+        sprintf(string, " |     no    |  %3.0dHz   |", imu_array[i]->sampleFrequency);
+      }
+      if (imu_array[i]->sampleRateGiven)
+      {//                       |     no   |
+        strcat(string, "    yes   |");
+      }
+      else
+      {
+        strcat(string, "    no    |");
+      }
+      if (imu_array[i]->is_calibrated)
+      {//                       |  no |
+        strcat(string, " yes |");
+      }
+      else
+      {
+        strcat(string, "  no |");
+      }
+      if (imu_array[i]->measuring)
+      {//                       |  no  |
+        strcat(string, "  yes |");
+      }
+      else
+      {
+        strcat(string, "  no  |");
+      }
+      xQueueSend(pPrintQueue, string, 0);
+      //                      |    ?    |
+      xQueueSend(pPrintQueue, "   xxx V |", 0); // todo battery voltage
+      //                      |    ?      |
+      xQueueSend(pPrintQueue, "   xxxx    |", 0); // todo sync time
+      //                      | IMU Quaternions 9DOF (Quaternions only) |
+      switch(imu_array[i]->outputDataType)
+      {
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUATBAT:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "        IMU Quaternions + Battery voltage level       |", 0);
+          break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "                 IMU Quaternions only                 |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "      IMU Quaternions + Gyroscope + Accelerometer     |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "  IMU Quaternions + Gyroscope + Accelerometer @ 100Hz |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "      IMU Quaternions (Quaternions only) @ 100Hz      |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "        IMU Quaternions 9DOF (Quaternions only)       |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "    IMU Quaternions 9DOF (Quaternions only) @ 100Hz   |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "     IMU Gyroscope + Accelerometer + Magnetometer     |", 0);
+		    break;
+        }
+        case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
+        {//                         | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, " IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |", 0);
+		    break;
+        }
+		  default:
+		  {//                       | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |
+		    xQueueSend(pPrintQueue, "            Unknown Data Type Output value            |", 0);
+ 		  }
+      }
+      if (imu_array[i]->outputDataTypeGiven)
+      {//                       |     no
+        xQueueSend(pPrintQueue, "    yes\n", 0);
+      }
+      else
+      {
+        xQueueSend(pPrintQueue, "     no\n", 0);
+      }
+	}
+  }
 }
 
 

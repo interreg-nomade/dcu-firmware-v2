@@ -12,7 +12,7 @@
 #define STOMEAS_LIB_STORAGE_MEASUREMENTS_LIST_H_
 
 #include <stdint.h>
-#include "common.h"
+#include "../../app/common.h"
 
 #define MEASUREMENT_LISTS_MAX_ELEMS 32
 

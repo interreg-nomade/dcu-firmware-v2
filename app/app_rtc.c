@@ -22,7 +22,7 @@
 #include <time.h>
 #include <inttypes.h>
 
-#include "ds3231_rtc/ds3231.h"
+#include "../lib/ds3231_rtc/ds3231.h"
 //#include "M24512/m24512.h"
 #include "common.h"
 
@@ -114,6 +114,7 @@ void rtos_rtc_thread(const void * params)
 //	dateTime.tm_year = 	BcdToDec(get_time[6])+100;
 
   ds3231_Set_Time(ds3231time.seconds, ds3231time.minutes, ds3231time.hours, ds3231time.dayofweek, ds3231time.dayofmonth, ds3231time.month, ds3231time.year);
+
   ds3231_Get_Time(&ds3231time);
 
   dateTime.tm_sec  = ds3231time.seconds;
@@ -129,6 +130,7 @@ void rtos_rtc_thread(const void * params)
   sprintf(string, "[app_rtc] [rtos_rtc_thread] Date & Time from RTC (DS3231): %s\n",buff);
   xQueueSend(pPrintQueue, string, 0);
 #endif
+
 
   /* Get the unix timestamp number of seconds elapsed  since 1st January 1970 */
   epoch = mktime(&dateTime);
@@ -177,11 +179,16 @@ void rtos_rtc_increment()
 
 void RTC_Config_Init()
 { /* Find if an RTC is present in the RAW configuration File */
+	osDelay(2000);
+//#if PRINTF_APP_RTC
+//   xQueueSend(pPrintQueue, "[app_rtc] [RTC_Config_Init] starting...\n", 0);
+//#endif
+
   CONFIG_WAITING_FOR_DECODE(); /* Block on this line until a RAW configuration File is decoded and valid */
   /* New configuration retrieved. */
-#if PRINTF_APP_RTC
-   xQueueSend(pPrintQueue, "[app_rtc] [RTC_Config_Init] New configuration retrieved.\n", 0);
-#endif
+//#if PRINTF_APP_RTC
+//   xQueueSend(pPrintQueue, "[app_rtc] [RTC_Config_Init] New configuration retrieved.\n", 0);
+//#endif
   int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_RTC);
   if (n==1)
   { /* Retrieved one RTC instrument */
@@ -189,9 +196,9 @@ void RTC_Config_Init()
 	if (n == 1)
 	{ /* Correctly retrieved instrument pointer */
 	  pEpoch64 = (uint64_t*) RtcInstrumentHandler->data;
-#if PRINTF_APP_RTC
-      xQueueSend(pPrintQueue, "[app_rtc] [RTC_Config_Init] RTC instrument pointer correctly set from RAW Configuration File.\n", 0);
-#endif
+//#if PRINTF_APP_RTC
+//      xQueueSend(pPrintQueue, "[app_rtc] [RTC_Config_Init] RTC instrument pointer correctly set from RAW Configuration File.\n", 0);
+//#endif
 	}
   }
   else

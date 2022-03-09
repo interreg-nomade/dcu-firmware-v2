@@ -3,7 +3,7 @@
 #include "usart.h"
 #include <string.h> // om de functie strlen te hebben
 #include "usart.h"  //to declare huart5
-#include "app_init.h" // to declare QueueHandle_t
+#include "../../app/app_init.h" // to declare QueueHandle_t
 
 #define Ringbuffer_DBG_PRINTF 0
 

@@ -21,7 +21,7 @@
  *
  */
 #include "sd_card_com.h"
-#include "interface_sd.h"
+#include "../pinterface/interface_sd.h"
 
 extern FATFS myFATAFS;
 extern FIL myFILE;
@@ -85,7 +85,7 @@ void SD_CARD_COM_create_new_file(void)
   file_nummer = SD_CARD_COM_check_existing_files();
   char path [25];
   sprintf(path, "MES_%d.TXT", file_nummer);
-  HAL_UART_Transmit(&huart5, (uint8_t *)path, strlen(path), 25);
+  HAL_UART_Transmit(&huart7, (uint8_t *)path, strlen(path), 25);
   res = SD_CARD_COM_open_close(&myFILE, path, FA_CREATE_NEW);
   if(res == FR_OK)
   {

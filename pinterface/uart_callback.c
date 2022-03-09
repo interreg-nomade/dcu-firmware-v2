@@ -10,13 +10,13 @@
 
 #include <string.h>
 #include "../lib/tablet_com_protocol/parser.h"
-#include "app_tablet_com.h"
+#include "../app/app_tablet_com.h"
 #include "../app/app_terminal_com.h"
-#include "../app/app_BT1_com.h"
-#include "app_init.h" // to declare QueueHandle_t
+#include "../app/app_nRF52_com.h"
+#include "../app/app_init.h" // to declare QueueHandle_t
 
 #define PRINTF_UART3_CALLBACK 0 // Tablet
-#define PRINTF_UART4_CALLBACK 0 // BT1
+#define PRINTF_UART4_CALLBACK 0 // nrF52
 #define PRINTF_UART5_CALLBACK 0 // Terminal
 
 //#include "UartRingbufferManager.h"
@@ -85,23 +85,23 @@ void uart4_callback(void)
 		sprintf(string, "[uart_callback] [uart4_callback] Received byte = 0x%02X.\n",rxdByte);
         xQueueSend(pPrintQueue, string, 0);
 #endif
-		bt_RxHandler(rxdByte);
+        nRF52_RxHandler(rxdByte);
 	}
 }
 
-void uart5_callback(void)
+void uart7_callback(void)
 {
 #if PRINTF_UART5_CALLBACK
-	sprintf(string, "[uart_callback] [uart5_callback]\n");
+	sprintf(string, "[uart_callback] [uart7_callback]\n");
     xQueueSend(pPrintQueue, string, 0);
 #endif
-	if (__HAL_UART_GET_FLAG(&huart5, UART_FLAG_RXNE))
+	if (__HAL_UART_GET_FLAG(&huart7, UART_FLAG_RXNE))
 	{
 		/*Clear the interrupt by reading the DR:*/
 		char rxdByte;
-		rxdByte = huart5.Instance->RDR;
+		rxdByte = huart7.Instance->RDR;
 #if PRINTF_UART5_CALLBACK
-		sprintf(string, "[uart_callback] [uart5_callback] Received byte = 0x%02X.\n",rxdByte);
+		sprintf(string, "[uart_callback] [uart7_callback] Received byte = 0x%02X.\n",rxdByte);
         xQueueSend(pPrintQueue, string, 0);
 #endif
 		com_RxHandler(rxdByte);

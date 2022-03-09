@@ -465,7 +465,7 @@ void UART4_Init_Protection(void)
 //	xUART5_TxSemaphore = xSemaphoreCreateBinary();
 	/* Initialize the UART TX Mutex     */
 //	xUART5_TxMutex = xSemaphoreCreateMutex(); FTDI
-	MX_UART4_Init(BT_BAUDRATE);
+	MX_UART4_Init(NRF52_BAUDRATE);
 	HAL_NVIC_SetPriority(UART4_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(UART4_IRQn);
 	/* Enable RX Not Empty interrupt */
@@ -474,17 +474,32 @@ void UART4_Init_Protection(void)
 	SET_BIT(huart4.Instance->CR3, 0x01);
 }
 
-void UART5_Init_Protection(void)
+//void UART5_Init_Protection(void)
+//{
+//	/* Initialize the UART TX Semaphore */
+////	xUART5_TxSemaphore = xSemaphoreCreateBinary();
+//	/* Initialize the UART TX Mutex     */
+////	xUART5_TxMutex = xSemaphoreCreateMutex(); FTDI
+//	MX_UART5_Init(COM_BAUDRATE);
+//	HAL_NVIC_SetPriority(UART5_IRQn, 9, 0);
+//	HAL_NVIC_EnableIRQ(UART5_IRQn);
+//	/* Enable RX Not Empty interrupt */
+//	__HAL_UART_ENABLE_IT(&huart5, UART_IT_RXNE);
+//	/* Enable the error interrupt (it is handled by the ST library in ISR context) */
+//	SET_BIT(huart5.Instance->CR3, 0x01);
+//}
+
+void UART7_Init_Protection(void)
 {
 	/* Initialize the UART TX Semaphore */
 //	xUART5_TxSemaphore = xSemaphoreCreateBinary();
 	/* Initialize the UART TX Mutex     */
 //	xUART5_TxMutex = xSemaphoreCreateMutex(); FTDI
-	MX_UART5_Init(COM_BAUDRATE);
-	HAL_NVIC_SetPriority(UART5_IRQn, 9, 0);
-	HAL_NVIC_EnableIRQ(UART5_IRQn);
+	MX_UART7_Init(COM_BAUDRATE);
+	HAL_NVIC_SetPriority(UART7_IRQn, 9, 0);
+	HAL_NVIC_EnableIRQ(UART7_IRQn);
 	/* Enable RX Not Empty interrupt */
-	__HAL_UART_ENABLE_IT(&huart5, UART_IT_RXNE);
+	__HAL_UART_ENABLE_IT(&huart7, UART_IT_RXNE);
 	/* Enable the error interrupt (it is handled by the ST library in ISR context) */
-	SET_BIT(huart5.Instance->CR3, 0x01);
+	SET_BIT(huart7.Instance->CR3, 0x01);
 }

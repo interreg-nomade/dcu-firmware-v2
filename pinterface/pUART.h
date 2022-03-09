@@ -24,7 +24,7 @@
 //void UART2_Init_Protection(void);
 void UART3_Init_Protection(void);
 void UART4_Init_Protection(void);
-void UART5_Init_Protection(void);
+void UART7_Init_Protection(void);
 //void UART8_Init_Protection(void);
 
 /* Write several bytes */

@@ -233,12 +233,15 @@ typedef struct {
 typedef struct {
 	/* Timestamp as milliseconds elapsed since t0 (bootup time) */
 	unsigned int	    timestamp;
+//!	unsigned int        module;
 
 	three_axis_data_t	accelerometer1;
 	three_axis_data_t	gyroscope1;
+	three_axis_data_t	magnetometer1;
 	rot_vector_data_t	rotVectors1;
 	three_axis_data_t	accelerometer2;
 	three_axis_data_t	gyroscope2;
+	three_axis_data_t	magnetometer2;
 	rot_vector_data_t	rotVectors2;
 
 } imu_100Hz_data_t;

@@ -63,6 +63,7 @@ typedef struct {
 
 	uint16_t instrumentID;
 	uint16_t numberOfParameters;
+//	uint8_t instrumentNr; // added 20220221
 
 	// Coordinate for view
 	int32_t 	x;
@@ -112,7 +113,9 @@ typedef struct {
 	uint32_t viewAngle;
 	uint32_t interSensorDistance;
 
-	uint32_t pollRank;
+	uint32_t pollRank; // in use since 20220222 for the BLEmodules:
+	                   // pollRank points to the BLEmodule number it is linked to.
+	                   // if this value is 0, it means it can be assigned to a BLE module.
 
 	uint16_t outputDataSize; //in bytes
 

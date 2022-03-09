@@ -5,7 +5,7 @@
  * @version 0.1
  * @date March 2019, Revised in August 2019
  */
-#include <queues/streamer_service/streamer_service_queue.h>
+#include "streamer_service_queue.h"
 #include <stdint.h>
 /* FreeRTOS includes */
 #include "FreeRTOS.h"

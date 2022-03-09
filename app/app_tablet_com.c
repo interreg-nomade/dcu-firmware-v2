@@ -26,17 +26,17 @@
 #include "app_storage.h"
 
 /* Communication protocol Header part */
-#include "tablet_com_protocol/frames.h"
-#include "tablet_com_protocol/parser.h"
-#include "tablet_com_protocol/fc_tx.h"
-#include "tablet_com_protocol/fc_rx.h"
-#include "tablet_com_protocol/fc_frames.h" //#include "../lib/tablet_com_protocol/fc_frames.h"
+#include "../lib/tablet_com_protocol/frames.h"
+#include "../lib/tablet_com_protocol/parser.h"
+#include "../lib/tablet_com_protocol/fc_tx.h"
+#include "../lib/tablet_com_protocol/fc_rx.h"
+#include "../lib/tablet_com_protocol/fc_frames.h" //#include "../lib/tablet_com_protocol/fc_frames.h"
 
 /* SD interface */
-#include "interface_sd.h"
+#include "../pinterface/interface_sd.h"
 
 /* Measurement list Header part */
-#include "stomeas_lib/storage_measurements_list.h"
+#include "../lib/stomeas_lib/storage_measurements_list.h"
 
 /* Queue header part */
 #include "queues/streamer_service/streamer_service_queue.h"
@@ -46,13 +46,13 @@
 
 /* Data structure header part*/
 #include "data/structures.h"
-#include "data_op/op.h"
-#include "fifo/fifo.h"
+#include "../util/data_op/op.h"
+#include "../lib/fifo/fifo.h"
 
 /* Hardware interface header part */
-#include "board.h"
+#include "../board/board.h"
 #include "usart.h"
-#include "pUART.h" /* Contains UART ressource (Mutex/Sempahore) */
+#include "../pinterface/pUART.h" /* Contains UART ressource (Mutex/Sempahore) */
 
 /* Logs header part */
 //#include "logs/devlogs.h"
@@ -163,7 +163,7 @@ void cpl_init_rx_task(void)
   memset(&CplRxMsg, 0, sizeof(cpl_msg_t));
   memset(&flowControlRx, 0, sizeof(fc_rx_handler_t));
   sprintf(string, "cpl_init_rx_task done. \n");
-  HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
+  HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
   osThreadDef(upLinksManager, upLinksManagerThread, osPriorityRealtime, 0, 4096);   /* Create upLinksManagerThread, was priority normal, but then issue with stopping a measurement */
   cplRxTaskHandle = osThreadCreate(osThread(upLinksManager), NULL);				/* Start upLinksManagerThread */
   watchdog_timer_init(); 														/* Init watchdog timer and start it */
@@ -486,6 +486,7 @@ void cpl_ServiceHandler(cpl_msg_t * pMsg, fc_tx_handler_t * pfcTxHandler, fc_rx_
 
 #if PRINTF_RTOS_UPLINK
   	      sprintf(string, "[APP_TABLET_COM] [cp_ServiceHandler] Date & Time received from Android Device: %s\n",buff);
+//  	      sprintf(string, "[APP_TABLET_COM] [cp_ServiceHandler] Date & Time received from Android Device.\n");
   	      xQueueSend(pPrintQueue, string, 0);
 #endif
   	      ds3231_time_t ds3231time;
@@ -1654,6 +1655,10 @@ void tablet_com_enabling_streaming(unsigned char nPacket, unsigned short nBytes)
   streamMsgEnabled.nPackets 		= nPacket;
   streamMsgEnabled.nBytes 			= nBytes;
   streamer_service_post(streamMsgEnabled);
+#if PRINTF_RTOS_UPLINK
+  sprintf(string, "%u [APP_TABLET_COM] [tablet_com_enabling_streaming] streamer Service on.\n",(unsigned int) HAL_GetTick());
+  xQueueSend(pPrintQueue, string, 0);
+#endif
 }
 
 void tablet_com_disable_streaming(void)
@@ -1663,6 +1668,10 @@ void tablet_com_disable_streaming(void)
   streamMsgEnabled.source      		= DEFAULT_MAINBOARD_ADDRESS;
   streamMsgEnabled.destination 		= androidTabLinkHandler.tabletAddress;
   streamer_service_post(streamMsgEnabled);
+#if PRINTF_RTOS_UPLINK
+  sprintf(string, "%u [APP_TABLET_COM] [tablet_com_disable_streaming] streamer Service off.\n",(unsigned int) HAL_GetTick());
+  xQueueSend(pPrintQueue, string, 0);
+#endif
 }
 
 void watchdog_timer_init(void) {
@@ -1705,7 +1714,7 @@ void watchdogTimerCallback(TimerHandle_t xTimer)
   { /* First message received from android device */
 	watchdogUsbRxCallback(); /* We first must initialize the watchdog value */
   }
-  else if(tablet_com_is_online() && timewithoutWatchdog >= USB_TABLET_COM_WATCHDOG_TIMEOUT)
+  else if(tablet_com_is_online() && (timewithoutWatchdog >= USB_TABLET_COM_WATCHDOG_TIMEOUT))
 	{ /* If android device is connected and watchdog timeout is exceeded */
 // Do not do anything yet with this... 20210505
 #if PRINTF_RTOS_UPLINK
@@ -1716,14 +1725,14 @@ void watchdogTimerCallback(TimerHandle_t xTimer)
 					 (unsigned int) watchdogGetTime());
   xQueueSend(pPrintQueue, string, 0);
 #endif
-//		tablet_com_set_state(0); // Pass the status of the android device to false
-//		watchdogSetTime(0); // Reset the watchdog
-//		firstAvailableAddress--; // Decrement the first available address
-//		if(app_streamer_usb_stream_enabled())
-//		{
-//			/* Disable the streaming if enable */
-//			tablet_com_disable_streaming();
-//		}
+		tablet_com_set_state(0); // Pass the status of the android device to false
+		watchdogSetTime(0); // Reset the watchdog
+		firstAvailableAddress--; // Decrement the first available address
+		if(app_streamer_usb_stream_enabled())
+		{
+			/* Disable the streaming if enable */
+			tablet_com_disable_streaming();
+		}
 //		if(app_storage_active())
 //		{
 //			/* Disable the storage if enable */
@@ -1750,3 +1759,5 @@ void tablet_com_send_watchdog_msg(char ad)
   cpl_buildFrame(&msg, &numElems, buffer);
   UART3_WriteBytes((uint8_t*)buffer, numElems);
 }
+
+//watchdogTimerCallback

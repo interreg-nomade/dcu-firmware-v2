@@ -9,13 +9,13 @@
 #include "app_tablet_com.h"
 #include "app_rtc.h"
 
-#include <data/structures.h>  /* Contains the data structures */
-#include "pUART.h"
+#include "data/structures.h"  /* Contains the data structures */
+#include "../pinterface/pUART.h"
 #include <string.h>
 #include "common.h"
-#include "tablet_com_protocol/parser.h"	/* Export to the Android tablet */
+#include "../lib/tablet_com_protocol/parser.h"	/* Export to the Android tablet */
 #include "queues/streamer_service/streamer_service_queue.h"
-#include "tablet_com_protocol/streaming.h"
+#include "../lib/tablet_com_protocol/streaming.h"
 
 #include "FreeRTOS.h"
 #include "cmsis_os.h"

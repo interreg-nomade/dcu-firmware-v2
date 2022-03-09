@@ -7,7 +7,7 @@
 
 #include "proteusII_driver.h"
 #include <string.h>
-#include "app_init.h" // to declare QueueHandle_t
+#include "../app/app_init.h" // to declare QueueHandle_t
 
 #define PRINTF_PROTEUSII_DRIVER 0
 

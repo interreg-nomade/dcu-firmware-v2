@@ -33,6 +33,7 @@
 /* IMU module status variables -----------------------------------------------*/
 typedef struct __imu_module{
 	volatile uint8_t   number;
+	volatile uint8_t   instrument;
 	UART_HandleTypeDef *uart;
 	uint8_t            mac_address [6];     // as defined in the RAW file
 	char               *name;
@@ -46,6 +47,7 @@ typedef struct __imu_module{
 	volatile uint32_t  sync_time;
 	volatile uint32_t  outputDataType;      // see parameters_id.h, copy of output data type defined in the RAW file
 	volatile uint8_t   outputDataTypeGiven; // is zero when the sensor has not confirmed that the data output type is set
+	volatile uint8_t   is_synchronized;        // is 1 when synchronized
 	/* ... */
 } imu_module;
 

@@ -27,13 +27,21 @@ Src \
 app \
 app/config \
 app/data \
+app/queues/android_device_com \
 app/queues/config_service \
+app/queues/measurements \
+app/queues/notification \
+app/queues/sd_writer_service_queue \
 app/queues/streamer_service \
 board \
+lib/bno080-driver \
 lib/ds3231_rtc \
+lib/fifo \
 lib/ring_buffer \
+lib/stomeas_lib \
 lib/tablet_com_protocol \
 lib/tablet_com_protocol/test \
 pinterface \
+pinterface/sh2_interface \
 startup \
 

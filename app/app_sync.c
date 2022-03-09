@@ -49,18 +49,20 @@ void syncThread(const void * params)
   xTaskNotifyStateClear(NULL); /* Clear the notification before entering the while loop */
   for(;;)
   {
-	/* Block until we get the notification from the timer interruption */
+	/* Block until we get the notification from the timer interruption
+	 * See timer2_callback() in timer_callback.c, which is calling app_sync_notify_from_isr() every 20ms
+	 */
 	if (xTaskNotifyWait( 0x00,                         /* Don't clear any bits on entry. */
 				         0xffffffff,                   /* Clear all bits on exit. (long max) */
 				         &ulInterruptStatus,           /* Receives the notification value. */
 				         portMAX_DELAY ) == pdTRUE)    /* Block task undefinetely */
-	{ /* Each 20ms, snapshot (copy) the configuration and copy decodedConfig in snapshotConfig */
+	{ /* Every 20ms, snapshot (copy) the configuration and copy decodedConfig in snapshotConfig */
 	  decodedConfig.get(); 												// Get the mutex of the decoded config
 	  decodedConfig.conf.cycleCounter = app_rtc_get_cycle_counter(); 	// Get the cycle counter and store it in the decoded config
 	  config_copy(&snapshotconf, &decodedConfig.conf); 					// Make a copy of the decoded config
 	  decodedConfig.release(); 											// Release the mutex of the decoded config
 	  app_streamer_notify(APP_STREAMER_NOTIF_CYCLE_COUNTER);  			// Notify the streamer thread
-	  app_storage_notify(APP_STORAGE_NOTIF_CYCLE_COUNTER);				// Notify the storage thread
+	  //app_storage_notify(APP_STORAGE_NOTIF_CYCLE_COUNTER);				// Notify the storage thread
 	}
   }
 }

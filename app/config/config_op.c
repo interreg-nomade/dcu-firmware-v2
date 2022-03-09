@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "usart.h"  //to declare huart5
-#include "app_init.h" // to include Queuehandle_t
+#include "../app_init.h" // to include Queuehandle_t
 
 #define CYCLE_COUNTER_SIZE 					4
 #define MEASUREMENT_DATASET_STATUS_SIZE		1
@@ -128,6 +128,47 @@ int config_linkParsingFunctions(decoded_config_t * pConf)
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_gyro_acc_100Hz;
 		  break;
 		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
+		{
+#if CONFIG_LINK_PRINT_INFOS
+		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_100HZ, assigning parsing function.\n", 0);
+#endif
+		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_100Hz;
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
+		{
+#if CONFIG_LINK_PRINT_INFOS
+		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_9DOF, assigning parsing function.\n", 0);
+#endif
+		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_9DOF;
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
+		{
+#if CONFIG_LINK_PRINT_INFOS
+		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_9DOF_100HZ, assigning parsing function.\n", 0);
+#endif
+		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_9DOF_100Hz;
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
+		{
+#if CONFIG_LINK_PRINT_INFOS
+		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMU_GYRO_ACC_MAG, assigning parsing function.\n", 0);
+#endif
+		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_gyro_acc_mag;
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
+		{
+#if CONFIG_LINK_PRINT_INFOS
+		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMU_GYRO_ACC_MAG_100HZ, assigning parsing function.\n", 0);
+#endif
+		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_gyro_acc_mag_100Hz;
+		  break;
+		}
+
 //		case SETUP_PRM_DATA_OUTPUT_DATATYPE_GPSMINDATA:
 //		{
 //#if CONFIG_LINK_PRINT_INFOS
@@ -279,6 +320,7 @@ int config_linkParsingFunctions_fromList(decoded_config_t * pConf, parsing_assoc
 
 int config_allocateDataSpace(decoded_config_t * pConf)
 {
+  int module_id = 0; // to distinguish the different possible modules with the same definition
   for (unsigned int i = 0; i<pConf->numberOfInstruments; i++)
   {
     if (pConf->instruments)
@@ -411,6 +453,76 @@ int config_allocateDataSpace(decoded_config_t * pConf)
 		{
 #if CONFIG_DATA_ALLOC_PRINT_INFOS
 		  sprintf(string, "[config_op] [config_allocateDataSpace] Found parameter IMUQUAT_GYRO_ACC_100HZ, allocating %d bytes.\n", sizeof(imu_100Hz_data_t));
+		  xQueueSend(pPrintQueue, string, 0);
+#endif
+		  pConf->instruments[i].data = malloc (sizeof(imu_100Hz_data_t));
+		  if (!pConf->instruments[i].data)
+		  {
+		    /* Pointer is still NULL */
+		  }
+		  memset(pConf->instruments[i].data, 0, sizeof(imu_100Hz_data_t));
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
+		{
+#if CONFIG_DATA_ALLOC_PRINT_INFOS
+		  sprintf(string, "[config_op] [config_allocateDataSpace] Found parameter IMUQUAT_100HZ, allocating %d bytes.\n", sizeof(imu_100Hz_data_t));
+		  xQueueSend(pPrintQueue, string, 0);
+#endif
+		  pConf->instruments[i].data = malloc (sizeof(imu_100Hz_data_t));
+		  if (!pConf->instruments[i].data)
+		  {
+		    /* Pointer is still NULL */
+		  }
+		  memset(pConf->instruments[i].data, 0, sizeof(imu_100Hz_data_t));
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
+		{
+#if CONFIG_DATA_ALLOC_PRINT_INFOS
+		  sprintf(string, "[config_op] [config_allocateDataSpace] Found parameter IMUQUAT_9DOF, allocating %d bytes.\n", sizeof(imu_100Hz_data_t));
+		  xQueueSend(pPrintQueue, string, 0);
+#endif
+		  pConf->instruments[i].data = malloc (sizeof(imu_100Hz_data_t));
+		  if (!pConf->instruments[i].data)
+		  {
+		    /* Pointer is still NULL */
+		  }
+		  memset(pConf->instruments[i].data, 0, sizeof(imu_100Hz_data_t));
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
+		{
+#if CONFIG_DATA_ALLOC_PRINT_INFOS
+		  sprintf(string, "[config_op] [config_allocateDataSpace] Found parameter IMUQUAT_9DOF_100HZ, allocating %d bytes.\n", sizeof(imu_100Hz_data_t));
+		  xQueueSend(pPrintQueue, string, 0);
+#endif
+		  pConf->instruments[i].data = malloc (sizeof(imu_100Hz_data_t));
+		  if (!pConf->instruments[i].data)
+		  {
+		    /* Pointer is still NULL */
+		  }
+		  memset(pConf->instruments[i].data, 0, sizeof(imu_100Hz_data_t));
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
+		{
+#if CONFIG_DATA_ALLOC_PRINT_INFOS
+		  sprintf(string, "[config_op] [config_allocateDataSpace] Found parameter IMUGYRO_ACC_MAG, allocating %d bytes.\n", sizeof(imu_100Hz_data_t));
+		  xQueueSend(pPrintQueue, string, 0);
+#endif
+		  pConf->instruments[i].data = malloc (sizeof(imu_100Hz_data_t));
+		  if (!pConf->instruments[i].data)
+		  {
+		    /* Pointer is still NULL */
+		  }
+		  memset(pConf->instruments[i].data, 0, sizeof(imu_100Hz_data_t));
+		  break;
+		}
+		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
+		{
+#if CONFIG_DATA_ALLOC_PRINT_INFOS
+		  sprintf(string, "[config_op] [config_allocateDataSpace] Found parameter IMUGYRO_ACC_MAG_100HZ, allocating %d bytes.\n", sizeof(imu_100Hz_data_t));
 		  xQueueSend(pPrintQueue, string, 0);
 #endif
 		  pConf->instruments[i].data = malloc (sizeof(imu_100Hz_data_t));
@@ -630,10 +742,10 @@ int config_allocateDataSpace(decoded_config_t * pConf)
 	  }
 	}
   }
-#if CONFIG_DATA_ALLOC_PRINT_INFOS
-  sprintf(string, "%u [config_op] [config_allocateDataSpace] Number of instruments done: %d.\n",(unsigned int) HAL_GetTick(),pConf->numberOfInstruments);
-  xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if CONFIG_DATA_ALLOC_PRINT_INFOS
+//  sprintf(string, "%u [config_op] [config_allocateDataSpace] Number of instruments done: %d.\n",(unsigned int) HAL_GetTick(),pConf->numberOfInstruments);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
   return pConf->numberOfInstruments;
 }
 
@@ -686,23 +798,17 @@ int config_dbg_ascii(decoded_config_t * pConf)
  * @param pDest pointer to the destination buffer
  * @param pSize pointer to an unsigned int -> number of bytes written in the pDest buffer
  */
-/* pConf pointer to the decoded configuration
- * dest pointer to the destination buffer
- * n pointer to an unsigned int ; number of bytes writtens
- */
 int config_createStreamPacket(decoded_config_t * pConf, unsigned char * pDest, unsigned int * pSize)
 {
-	assert(pConf != NULL);
-	assert(pDest != NULL);
-	assert(pSize != NULL);
-
-	/* intermediate pointer used */
+  assert(pConf != NULL);
+  assert(pDest != NULL);
+  assert(pSize != NULL);
+  /* intermediate pointer used */
   instrument_config_t * pInst;
-	/* Point to the decodedconfig instruments struct part */
+  /* Point to the decodedconfig instruments struct part */
   pInst = pConf->instruments;
-
-	/* Initialize the number of bytes to be written to 0 */
-	*pSize = 0;
+  /* Initialize the number of bytes to be written to 0 */
+  *pSize = 0;
   for (unsigned int i = 0; i < pConf->numberOfInstruments; i++)
   {
 	if (pInst != NULL)
@@ -712,36 +818,8 @@ int config_createStreamPacket(decoded_config_t * pConf, unsigned char * pDest, u
 	  if (pInst->parseBinary)
 	  {
 //#if CONFIG_DATA_ALLOC_PRINT_INFOS
-//        sprintf(string, "%u [config_op] [config_createStreamPacket] Parsing measure data of instrument ID %d, with output type %08X = ",(unsigned int) HAL_GetTick(), pInst->instrumentID, pInst->dataTypeOutput);
-//        HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
-//        switch(pInst->dataTypeOutput)
-//        {
-//          case SETUP_PRM_DATA_OUTPUT_DATATYPE_NONE:
-//          {
-//			sprintf(string, "None.\r\n");
-//            break;
-//          }
-//          case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMU9AXISROTVEC:
-//          {
-//			sprintf(string, "IMU_9AXIS_ROT_VECTOR.\r\n");
-//            break;
-//          }
-//          case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUATBAT:
-//          {
-//			sprintf(string, "IMU Quaternions + Battery voltage level.\r\n");
-//			HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
-//          }
-//          case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
-//          {
-//			sprintf(string, "IMU Quaternions only.\r\n");
-//            break;
-//          }
-//		  	  default:
-//			  {
-//			    sprintf(string, "Unknown Data Type Output value.\r\n");
-//			  }
-//        }
-//		HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
+//      sprintf(string, "%u [config_op] [config_createStreamPacket] Parsing measure data of instrument ID %d.\n",(unsigned int) HAL_GetTick(), pInst->instrumentID);
+//      xQueueSend(pPrintQueue, string, 0);
 //#endif
 		unsigned int nbytes = 0;
         /* Call the parsing function
@@ -754,8 +832,8 @@ int config_createStreamPacket(decoded_config_t * pConf, unsigned char * pDest, u
 		if (nbytes)
 		{
 		  pDest[nbytes++] = MEASUREMENT_DATA_OK;
-		  pDest += nbytes;
-		  *pSize    += nbytes;
+		  pDest          += nbytes;
+		  *pSize         += nbytes;
 		}
 	  }
 	}
@@ -858,76 +936,62 @@ int config_createStoragePacket(decoded_config_t * pConf,
 
 int getNumberOfInstrumentSpecificFromConfig(decoded_config_t * conf, int type)
 {
-	if (!conf)
-	{
+  if (!conf)
+  {
 #if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [getNumberOfInstrumentSpecificFromConfig] No configuration file.\n", 0);
+    xQueueSend(pPrintQueue, "[config_op] [getNumberOfInstrumentSpecificFromConfig] No configuration file.\n", 0);
 #endif
-		return -1;
-	}
-
-	unsigned int j = 0;
-
-	for (unsigned int i = 0; i < conf->numberOfInstruments; i++)
+	return -1;
+  }
+  unsigned int j = 0;
+  for (unsigned int i = 0; i < conf->numberOfInstruments; i++)
+  {
+	if (conf->instruments[i].comMethod == type && !conf->instruments[i].pollRank)
 	{
-#if CONFIG_LINK_PRINT_INFOS
-		  sprintf(string, "%u [config_op] [getNumberOfInstrumentSpecificFromConfig] Instrument %d communication method: 0x%0X.\n",(unsigned int) HAL_GetTick(), i, (unsigned int) conf->instruments[i].comMethod);
-		  xQueueSend(pPrintQueue, string, 0);
-#endif
-		if (conf->instruments[i].comMethod == type)
-		{
-		/* Copy the node scanned in the pointer list */
-			//canNodesList.dpNode[counter++] = &decodedConfig.conf.instruments[i];
-			j++;
-		}
+	  j++;
 	}
-
-   return j;
+  }
+  return j;
 }
 
 int getInstrumentFromConfig(decoded_config_t * conf, instrument_config_t ** pResInst, int type)
 {
-	if (!conf)
+  if (!conf)
+  {
+	return -1;
+  }
+  unsigned int j = 0;
+  instrument_config_t * pInst = NULL;
+  pInst = conf->instruments;
+  for (unsigned int i = 0; i < conf->numberOfInstruments; i++)
+  {
+	if (pInst)
 	{
-		return -1;
-	}
-
-	unsigned int j = 0;
-	instrument_config_t * pInst = NULL;
-	pInst = conf->instruments;
-
-	for (unsigned int i = 0; i < conf->numberOfInstruments; i++)
-	{
-		if (pInst)
+	  if (pInst->comMethod == type && !pInst->pollRank)
+	  {
+		if (!j)
 		{
-			if (pInst->comMethod == type)
-			{
-				*pResInst = pInst;
-				j++;
-			}
-		}
-		else
-		{
-			//pInst = null
-		}
-		pInst++;
-#if 0
-		/* For all the instruments configured */
-		if (conf->instruments[i].comMethod == type)
-		{
-			printf("Data points to: %p\n", pInst->data);
-		/* Copy the node scanned in the pointer list */
-			//canNodesList.dpNode[counter++] = &decodedConfig.conf.instruments[i];
-			pResInst = &(conf->instruments[i]);
-			printf("Address: %p\n", (void*) &conf->instruments[i] );
-		}
+		  *pResInst = pInst;
+		  pInst->pollRank = 1; // to make sure that the same instrument will not be assigned
+#if CONFIG_LINK_PRINT_INFOS
+		  sprintf(string, "%u [config_op] [getInstrumentFromConfig] Instrument %d assigned for communication method: 0x%0X at address %p.\n",
+		    (unsigned int) HAL_GetTick(), i, (unsigned int) conf->instruments[i].comMethod, (void*) &conf->instruments[i]);
+		  xQueueSend(pPrintQueue, string, 0);
 #endif
+		}
+		j++;
+	  }
 	}
-
-   return j;
+	else
+	{
+	  //pInst = null
+	}
+	pInst++;
+  }
+  return j;
 }
 
-//todo : need to implement this function to be error proof
+//todo : need to implement this function to be error proof, this function is currently not used
 int setInstrumentToConfig(decoded_config_t * conf, unsigned int comMethod, void * data, size_t size)
 {
 	if(!conf)
@@ -1007,5 +1071,55 @@ unsigned int config_getStoragePacketSize(decoded_config_t * pConf)
 		pInst++;
 	}
 	return size;
+}
+
+void refreshBLEmoduleData(const imu_100Hz_data_t *sensorEvent, imu_100Hz_data_t * imu)
+{
+	float t;
+	unsigned int t_ms;
+	t     = 1 / 1000000.0;  // time in seconds.
+	t_ms = (unsigned int) (1000.0 / 1000.0); //time in milliseconds in an unsigned int
+	imu->timestamp 	            = t_ms;
+	imu->rotVectors1.real 		= sensorEvent->rotVectors1.real;
+	imu->rotVectors1.i 			= sensorEvent->rotVectors1.i;
+	imu->rotVectors1.j 			= sensorEvent->rotVectors1.j;
+	imu->rotVectors1.k 			= sensorEvent->rotVectors1.k;
+	imu->gyroscope1.x			= sensorEvent->gyroscope1.x;
+	imu->gyroscope1.y			= sensorEvent->gyroscope1.y;
+	imu->gyroscope1.z			= sensorEvent->gyroscope1.z;
+    imu->accelerometer1.x		= sensorEvent->accelerometer1.x;
+    imu->accelerometer1.y		= sensorEvent->accelerometer1.y;
+    imu->accelerometer1.z		= sensorEvent->accelerometer1.z;
+    imu->magnetometer1.x		= sensorEvent->magnetometer1.x;
+    imu->magnetometer1.y		= sensorEvent->magnetometer1.y;
+    imu->magnetometer1.z		= sensorEvent->magnetometer1.z;
+	imu->rotVectors2.real 		= sensorEvent->rotVectors2.real;
+	imu->rotVectors2.i 			= sensorEvent->rotVectors2.i;
+	imu->rotVectors2.j 			= sensorEvent->rotVectors2.j;
+	imu->rotVectors2.k 			= sensorEvent->rotVectors2.k;
+	imu->gyroscope2.x			= sensorEvent->gyroscope2.x;
+	imu->gyroscope2.y			= sensorEvent->gyroscope2.y;
+	imu->gyroscope2.z			= sensorEvent->gyroscope2.z;
+    imu->accelerometer2.x		= sensorEvent->accelerometer2.x;
+    imu->accelerometer2.y		= sensorEvent->accelerometer2.y;
+    imu->accelerometer2.z		= sensorEvent->accelerometer2.z;
+    imu->magnetometer2.x		= sensorEvent->magnetometer2.x;
+    imu->magnetometer2.y		= sensorEvent->magnetometer2.y;
+    imu->magnetometer2.z		= sensorEvent->magnetometer2.z;
+//	sprintf(string, "%u [APP_BLEmodule%u] [BLE%uTask] Received data: %04X%04X%04X - %04X%04X%04X - %04X%04X%04X - %04X%04X%04X - %04X%04X%04X - %04X%04X%04X\n",
+//	  (unsigned int) HAL_GetTick(), (unsigned int) sensorEvent->module, (unsigned int) sensorEvent->module,
+//	  (unsigned int) sensorEvent->gyroscope1.x,     (unsigned int) sensorEvent->gyroscope1.y,     (unsigned int) sensorEvent->gyroscope1.z,
+//	  (unsigned int) sensorEvent->accelerometer1.x, (unsigned int) sensorEvent->accelerometer1.y, (unsigned int) sensorEvent->accelerometer1.z,
+//	  (unsigned int) sensorEvent->magnetometer1.x,  (unsigned int) sensorEvent->magnetometer1.y,  (unsigned int) sensorEvent->magnetometer1.z,
+//	  (unsigned int) sensorEvent->gyroscope2.x,     (unsigned int) sensorEvent->gyroscope2.y,     (unsigned int) sensorEvent->gyroscope2.z,
+//	  (unsigned int) sensorEvent->accelerometer2.x, (unsigned int) sensorEvent->accelerometer2.y, (unsigned int) sensorEvent->accelerometer2.z,
+//	  (unsigned int) sensorEvent->magnetometer2.x,  (unsigned int) sensorEvent->magnetometer2.y,  (unsigned int) sensorEvent->magnetometer2.z);
+//    xQueueSend(pPrintQueue, string, 0);
+
+    //			(unsigned int) sensorEvent.rotVectors1.real,
+    //			(unsigned int) sensorEvent.rotVectors1.i,
+    //			(unsigned int) sensorEvent.rotVectors1.j,
+    //			(unsigned int) sensorEvent.rotVectors1.k,
+
 }
 

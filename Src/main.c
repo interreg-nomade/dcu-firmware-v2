@@ -49,6 +49,7 @@
 
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
 #include "main.h"
 #include "cmsis_os.h"
 #include "fatfs.h"
@@ -59,7 +60,6 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include <string.h>
 #include "bsp_driver_sd.h"
 #include "usb_com.h"
 #include "imu_com.h"
@@ -67,15 +67,15 @@
 #include "UartRingbufferManager.h"
 #include "uart_com.h"
 #include "math.h"
-#include "interface_sd.h"
+#include "../pinterface/interface_sd.h"
+#include "nRF52_driver.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-
-#include "board.h"
-
-#include "timer_callback.h"
+#include "../board/board.h"
+#include "../pinterface/timer_callback.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -107,14 +107,18 @@ static osThreadId pPrintTaskHandle;
 
 float PI = 3.14159265358979323846;
 
-imu_module imu_1 = {1, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BT Module 1", 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_2 = {2, &huart6, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BT Module 2", 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_3 = {3, &huart7, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BT Module 3", 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_4 = {4, &huart8, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BT Module 4", 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_5 = {5, &huart1, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BT Module 5", 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_6 = {6, &huart2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BT Module 6", 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_1 = {1, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 1", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_2 = {2, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 2", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_3 = {3, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 3", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_4 = {4, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 4", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_5 = {5, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 5", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_6 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 6", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_7 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 7", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_8 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 8", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-imu_module *imu_array [] = {&imu_1, &imu_2, &imu_3, &imu_4, &imu_5, &imu_6};
+imu_module *imu_array [] = {&imu_1, &imu_2, &imu_3, &imu_4, &imu_5, &imu_6, &imu_7, &imu_8};
+
+
 
 //uint16_t file_nummer = 0;
 
@@ -204,7 +208,18 @@ int main(void)
 
   /* Start leds */
   //startUpLeds();
+
+  HAL_GPIO_WritePin(VDD_RTC_EN_GPIO_Port, VDD_RTC_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(VDD_BOOST_EN_GPIO_Port, VDD_BOOST_EN_Pin, GPIO_PIN_SET);
+
   HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_SET);
+
+  HAL_GPIO_WritePin(STCC_EN_GPIO_Port, STCC_EN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(STCC_CTL1_GPIO_Port, STCC_CTL1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(STCC_CTL2_GPIO_Port, STCC_CTL2_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(STCC_CTL3_GPIO_Port, STCC_CTL3_Pin, GPIO_PIN_RESET);
+
+
 
 #if RTT_DBG_TEST
   for (unsigned int i = 0; i<30; i++)
@@ -221,11 +236,12 @@ int main(void)
   MX_FREERTOS_Init();
 
   uint16_t software_version = DCU_SW_VERSION;
-  sprintf(string, "************************************\n   NOMADe Mainboard V3.1\n************************************\n");
-  HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
+  sprintf(string, "************************************\n   NOMADe Mainboard V2.002\n************************************\n");
+  HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
+
 
 //  pPrintQueue = xQueueCreate(10, sizeof(char *)); // protected print queue can contain max 10 character pointers
-  pPrintQueue = xQueueCreate(30, sizeof(string)); // protected print queue can contain max 30 strings of 150 characters each
+  pPrintQueue = xQueueCreate(70, sizeof(string)); // protected print queue can contain max 30 strings of 150 characters each
   osThreadDef(pPrintGatekeeper, pPrintGatekeeperThread, osPriorityNormal, 0, 1000);
   pPrintTaskHandle = osThreadCreate(osThread(pPrintGatekeeper), NULL);
 
@@ -397,7 +413,7 @@ static void pPrintGatekeeperThread(void)
 	{
 //		xQueueReceive(pPrintQueue, &pMessageToPrint, portMAX_DELAY); // for Queue of pointers
 		xQueueReceive(pPrintQueue, MessageToPrint, portMAX_DELAY); // for Queue of strings
-		HAL_UART_Transmit(&huart5, (uint8_t *)MessageToPrint, strlen(MessageToPrint), 25);
+		HAL_UART_Transmit(&huart7, (uint8_t *)MessageToPrint, strlen(MessageToPrint), 25);
 	}
 }
 /* USER CODE END 4 */
@@ -444,7 +460,7 @@ void convertBuffer(uint8_t * buf, uint8_t sensor_number){
 //			char string [100];
 			sprintf(string, "%d %d %d %d\n", data[0], data[1], data[2], data[3]);
 				//sprintf(string, "Timestamp: %i - Yaw: %i | Pitch: %i | Roll: %i - %i\n", timestamp, (uint16_t)(buf_YPR[0]/PI*180+180), (uint16_t)(buf_YPR[1]/PI*180+180), (uint16_t)(buf_YPR[2]/PI*180+180), num_send_1);
-			UART_COM_write(&huart5, (uint8_t *)string, strlen(string));
+			UART_COM_write(&huart7, (uint8_t *)string, strlen(string));
 			*/
 
 			#ifdef SAVE_YPR_SD_CARD
@@ -461,7 +477,7 @@ void convertBuffer(uint8_t * buf, uint8_t sensor_number){
         //sprintf(string, "Yaw: %i | Pitch: %i | Roll: %i\n", (uint16_t)(buf_YPR[0]/PI*180+180), (uint16_t)(buf_YPR[1]/PI*180+180), (uint16_t)(buf_YPR[2]/PI*180+180));
 				sprintf(string, "Yaw: %i | Pitch: %i | Roll: %i, %i, %i, %i\n", (uint16_t)(buf_YPR[0]/PI*180+180), (uint16_t)(buf_YPR[1]/PI*180+180), (uint16_t)(buf_YPR[2]/PI*180+180), num_send_1, num_send_2, timestamp);
 				//sprintf(string, "Timestamp: %i - Yaw: %i | Pitch: %i | Roll: %i - %i\n", timestamp, (uint16_t)(buf_YPR[0]/PI*180+180), (uint16_t)(buf_YPR[1]/PI*180+180), (uint16_t)(buf_YPR[2]/PI*180+180), num_send_1);
-				UART_COM_write(&huart5, (uint8_t *)string, strlen(string));
+				UART_COM_write(&huart7, (uint8_t *)string, strlen(string));
       #endif
       //    ***   Option 2: Pycharm frame YPR   ***   //
       #ifdef SEND_DATA_YPR
@@ -478,7 +494,7 @@ void convertBuffer(uint8_t * buf, uint8_t sensor_number){
         data_hex_buf [8] = (uint8_t)(data_hex_16 [2] >> 8);
         data_hex_buf [9] = calculateCS(data_hex_buf, 9);
 
-        HAL_UART_Transmit(&huart5, data_hex_buf, sizeof(data_hex_buf), 25);
+        HAL_UART_Transmit(&huart7, data_hex_buf, sizeof(data_hex_buf), 25);
       #endif
 
       //    ***   Option 3: Pycharm frame QUATERNIONS   ***   //
@@ -497,7 +513,7 @@ void convertBuffer(uint8_t * buf, uint8_t sensor_number){
         data_hex_buf [10] = (uint8_t)(data [3] >> 8);
         data_hex_buf [11] = calculateCS(data_hex_buf, 9);
 
-        HAL_UART_Transmit(&huart5, data_hex_buf, sizeof(data_hex_buf), 25);
+        HAL_UART_Transmit(&huart7, data_hex_buf, sizeof(data_hex_buf), 25);
       #endif
 
       //    ***   Option 4: Save YPR on SD card   ***   //

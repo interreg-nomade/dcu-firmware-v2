@@ -49,7 +49,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "tim.h"
-#include "timer_callback.h"
+#include "../pinterface/timer_callback.h"
 
 /* USER CODE BEGIN 0 */
 

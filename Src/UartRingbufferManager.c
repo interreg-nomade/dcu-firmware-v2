@@ -161,9 +161,9 @@ void UART_ISR_Manager(UART_HandleTypeDef *huart){
 //	if(huart->Instance == UART5){
 //		RB_UART_ISR(huart, &huart5_rx_buffer, &huart5_tx_buffer);
 //	}
-	if(huart->Instance == UART7){
-		RB_UART_ISR(huart, &huart7_rx_buffer, &huart7_tx_buffer);
-	}
+//	if(huart->Instance == UART7){
+//		RB_UART_ISR(huart, &huart7_rx_buffer, &huart7_tx_buffer);
+//	}
 	if(huart->Instance == UART8){
 		RB_UART_ISR(huart, &huart8_rx_buffer, &huart8_tx_buffer);
 	}

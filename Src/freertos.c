@@ -54,7 +54,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-#include "app_init.h" // bijgevoegd want project_init() is anders niet gedeclareerd
+#include "../app/app_init.h" // bijgevoegd want project_init() is anders niet gedeclareerd
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     

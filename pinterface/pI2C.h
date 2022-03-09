@@ -18,7 +18,7 @@
 #include "queue.h"
 #include "semphr.h"
 
-#include "sh2_hal_i2c.h"
+#include "sh2_interface/sh2_hal_i2c.h"
 
 //#include "i2c.h"
 

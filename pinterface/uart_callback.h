@@ -13,7 +13,7 @@
 
 void uart3_callback(void);
 void uart4_callback(void);
-void uart5_callback(void);
+void uart7_callback(void);
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
 
