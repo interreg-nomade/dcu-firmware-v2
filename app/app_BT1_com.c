@@ -49,9 +49,9 @@ extern QueueHandle_t eventQueue;
 extern SemaphoreHandle_t wakeSensorTask;
 
 imu_module *imuBT1 = NULL;
-uint8_t previous_connected_modules [6];
+uint8_t previous_connected_modules1 [6];
 
-char command;
+char command1;
 
 void BTComManagerThread(const void *params);
 
@@ -67,7 +67,7 @@ static int bt_RecMsgNotOK(void);
 static void rsv_data_msg_handler(void);
 static void rsv_data_handler(uint8_t * buf, uint8_t sensor_number, uint8_t data_format);
 
-imu_100Hz_data_t sensorEvent;
+imu_100Hz_data_t sensorEvent1;
 
 void bt_init_rx_task(void)
 {
@@ -98,14 +98,14 @@ void BTComManagerThread(const void *params)
 	BT_DECODER_RESULT BTRes = bt_prot_decoder(&BT1RxMsg);
     if (BTRes == BT_CORRECT_FRAME)
 	{
-      if (BT1RxMsg.command != CMD_DATA_IND)
+      if (BT1RxMsg.command1 != CMD_DATA_IND)
       {
 #if PRINTF_BT_COMMANAGER
 	    sprintf(string, "%u [app_BT1_com] [BTComManagerThread] BT module ",(unsigned int) HAL_GetTick());
 	    xQueueSend(pPrintQueue, string, 0);
 #endif
       }
-	  switch (BT1RxMsg.command)
+	  switch (BT1RxMsg.command1)
 	  {
 		case CMD_DATA_IND: //  Data has been received
 		{
@@ -227,60 +227,60 @@ void BTComManagerThread(const void *params)
             	    {
             	      case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
             	      {
-                        sensorEvent.rotVectors1.real = data[0];
-                        sensorEvent.rotVectors1.i 	 = data[1];
-                        sensorEvent.rotVectors1.j 	 = data[2];
-                        sensorEvent.rotVectors1.k 	 = data[3];
-                        sensorHandler(&sensorEvent);
+                        sensorEvent1.rotVectors1.real = data[0];
+                        sensorEvent1.rotVectors1.i 	 = data[1];
+                        sensorEvent1.rotVectors1.j 	 = data[2];
+                        sensorEvent1.rotVectors1.k 	 = data[3];
+                        sensorHandler(&sensorEvent1);
            	    		break;
             	      }
             	      case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUATBAT:
 					  { // battery voltage level not yet implemented, same as quaternions only for the moment
-	                    sensorEvent.rotVectors1.real = data[0];
-	                    sensorEvent.rotVectors1.i 	 = data[1];
-	                    sensorEvent.rotVectors1.j 	 = data[2];
-	                    sensorEvent.rotVectors1.k 	 = data[3];
-	                    sensorHandler(&sensorEvent);
+	                    sensorEvent1.rotVectors1.real = data[0];
+	                    sensorEvent1.rotVectors1.i 	 = data[1];
+	                    sensorEvent1.rotVectors1.j 	 = data[2];
+	                    sensorEvent1.rotVectors1.k 	 = data[3];
+	                    sensorHandler(&sensorEvent1);
 	           	    	break;
 					  }
             	      case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC:
 					  {
-		                sensorEvent.rotVectors1.real = data[0];
-		                sensorEvent.rotVectors1.i 	 = data[1];
-		                sensorEvent.rotVectors1.j 	 = data[2];
-		                sensorEvent.rotVectors1.k 	 = data[3];
-		                sensorEvent.gyroscope1.x	 = data[4];
-		                sensorEvent.gyroscope1.y	 = data[5];
-		                sensorEvent.gyroscope1.z	 = data[6];
-		                sensorEvent.accelerometer1.x = data[7];
-		                sensorEvent.accelerometer1.y = data[8];
-		                sensorEvent.accelerometer1.z = data[9];
-		                sensorHandler(&sensorEvent);
+		                sensorEvent1.rotVectors1.real = data[0];
+		                sensorEvent1.rotVectors1.i 	 = data[1];
+		                sensorEvent1.rotVectors1.j 	 = data[2];
+		                sensorEvent1.rotVectors1.k 	 = data[3];
+		                sensorEvent1.gyroscope1.x	 = data[4];
+		                sensorEvent1.gyroscope1.y	 = data[5];
+		                sensorEvent1.gyroscope1.z	 = data[6];
+		                sensorEvent1.accelerometer1.x = data[7];
+		                sensorEvent1.accelerometer1.y = data[8];
+		                sensorEvent1.accelerometer1.z = data[9];
+		                sensorHandler(&sensorEvent1);
 		           	    break;
 					  }
             	      case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
             	      {
-  		                sensorEvent.rotVectors1.real = data[0];
-  		                sensorEvent.rotVectors1.i 	 = data[1];
-  		                sensorEvent.rotVectors1.j 	 = data[2];
-  		                sensorEvent.rotVectors1.k 	 = data[3];
-  		                sensorEvent.gyroscope1.x	 = data[4];
-  		                sensorEvent.gyroscope1.y	 = data[5];
-  		                sensorEvent.gyroscope1.z	 = data[6];
-  		                sensorEvent.accelerometer1.x = data[7];
-  		                sensorEvent.accelerometer1.y = data[8];
-  		                sensorEvent.accelerometer1.z = data[9];
-  		                sensorEvent.rotVectors2.real = data[10];
-  		                sensorEvent.rotVectors2.i 	 = data[11];
-  		                sensorEvent.rotVectors2.j 	 = data[12];
-  		                sensorEvent.rotVectors2.k 	 = data[13];
-  		                sensorEvent.gyroscope2.x	 = data[14];
-  		                sensorEvent.gyroscope2.y	 = data[15];
-  		                sensorEvent.gyroscope2.z	 = data[16];
-  		                sensorEvent.accelerometer2.x = data[17];
-  		                sensorEvent.accelerometer2.y = data[18];
-  		                sensorEvent.accelerometer2.z = data[19];
-  		                sensorHandler(&sensorEvent);
+  		                sensorEvent1.rotVectors1.real = data[0];
+  		                sensorEvent1.rotVectors1.i 	 = data[1];
+  		                sensorEvent1.rotVectors1.j 	 = data[2];
+  		                sensorEvent1.rotVectors1.k 	 = data[3];
+  		                sensorEvent1.gyroscope1.x	 = data[4];
+  		                sensorEvent1.gyroscope1.y	 = data[5];
+  		                sensorEvent1.gyroscope1.z	 = data[6];
+  		                sensorEvent1.accelerometer1.x = data[7];
+  		                sensorEvent1.accelerometer1.y = data[8];
+  		                sensorEvent1.accelerometer1.z = data[9];
+  		                sensorEvent1.rotVectors2.real = data[10];
+  		                sensorEvent1.rotVectors2.i 	 = data[11];
+  		                sensorEvent1.rotVectors2.j 	 = data[12];
+  		                sensorEvent1.rotVectors2.k 	 = data[13];
+  		                sensorEvent1.gyroscope2.x	 = data[14];
+  		                sensorEvent1.gyroscope2.y	 = data[15];
+  		                sensorEvent1.gyroscope2.z	 = data[16];
+  		                sensorEvent1.accelerometer2.x = data[17];
+  		                sensorEvent1.accelerometer2.y = data[18];
+  		                sensorEvent1.accelerometer2.z = data[19];
+  		                sensorHandler(&sensorEvent1);
   		           	    break;
             	      }
             	      default:
@@ -1124,7 +1124,7 @@ void BTComManagerThread(const void *params)
 		break;
 		default:
 #if PRINTF_BT_COMMANAGER
-	      sprintf(string, "%u [app_BT1_com] [BTComManagerThread] BT module unknown command received: 0x%02X.",(unsigned int) HAL_GetTick(),BT1RxMsg.command);
+	      sprintf(string, "%u [app_BT1_com] [BTComManagerThread] BT module unknown command1 received: 0x%02X.",(unsigned int) HAL_GetTick(),BT1RxMsg.command1);
 	      xQueueSend(pPrintQueue, string, 0);
 #endif
 		break;
@@ -1150,7 +1150,7 @@ void bt_rst_msg(BT_msg_t * BTMsg)
 {
   if (BTMsg != NULL)
   {
-    BTMsg->command = 0;
+    BTMsg->command1 = 0;
     BTMsg->length = 0;
     BTMsg->CS = 0;
     memset(BTMsg->DU, 0, MAX_BT_PAYLOAD_LENGTH);
@@ -1184,7 +1184,7 @@ BT_DECODER_RESULT bt_prot_decoder(BT_msg_t * BTMsg)
       }
     }
     /* no break */
-    case  BT_BUILDING_HEADER: // check if command and length is available
+    case  BT_BUILDING_HEADER: // check if command1 and length is available
     {
 
 #if PRINTF_BT_COM
@@ -1202,7 +1202,7 @@ BT_DECODER_RESULT bt_prot_decoder(BT_msg_t * BTMsg)
         {
           /* Could build a header */
 #if PRINTF_BT_COM
-          sprintf(string,"%u [app_BT1_com] [bt_prot_decoder] [BTState = BT_BUILDING_HEADER] Command received is 0x%02X\n",(unsigned int) HAL_GetTick(), BT1RxMsg.command);
+          sprintf(string,"%u [app_BT1_com] [bt_prot_decoder] [BTState = BT_BUILDING_HEADER] command1 received is 0x%02X\n",(unsigned int) HAL_GetTick(), BT1RxMsg.command1);
 	      xQueueSend(pPrintQueue, string, 0);
           sprintf(string,"%u [app_BT1_com] [bt_prot_decoder] [BTState = BT_BUILDING_HEADER] Length of body is %d\n",(unsigned int) HAL_GetTick(), BT1RxMsg.length);
 	      xQueueSend(pPrintQueue, string, 0);
@@ -1309,7 +1309,7 @@ BT_DECODER_RESULT bt_prot_decoder(BT_msg_t * BTMsg)
 #if PRINTF_BT_COM
       sprintf(string, "%u [app_BT1_com] [bt_prot_decoder] [BTState = BT_CHECKING_FRAME] BT receiving buffer: ",(unsigned int) HAL_GetTick());
       xQueueSend(pPrintQueue, string, 0);
-      sprintf(string, "0x02 0x%02X 0x%04X",BT1RxMsg.command,BT1RxMsg.length);
+      sprintf(string, "0x02 0x%02X 0x%04X",BT1RxMsg.command1,BT1RxMsg.length);
       xQueueSend(pPrintQueue, string, 0);
       for (int i = 0; i < (BT1RxMsg.length); i++)
       {
@@ -1363,7 +1363,7 @@ static int bt_FindSdByte(void)
 }
 static int bt_HeaderPartPresent(void)
 {
-  if (ring_buffer_num_items(&BT1RingbufRx) >= 4) // start delimiter + command byte + 2 bytes representing length of body
+  if (ring_buffer_num_items(&BT1RingbufRx) >= 4) // start delimiter + command1 byte + 2 bytes representing length of body
   {
     return 1;
   }
@@ -1382,10 +1382,10 @@ static int bt_BuildHeader(void)
     ring_buffer_peek(&BT1RingbufRx, &rxdByte[0], 1);
     ring_buffer_peek(&BT1RingbufRx, &rxdByte[1], 2);
     ring_buffer_peek(&BT1RingbufRx, &rxdByte[2], 3);
-    BT1RxMsg.command = rxdByte[0];
+    BT1RxMsg.command1 = rxdByte[0];
     BT1RxMsg.length = (int) rxdByte[1] + 256 * (int) rxdByte[2];
 #if PRINTF_BT_COM
-    sprintf(string, "[app_BT_com][bt_BuildHeader] header: 0x%02X 0x%04X\n",BT1RxMsg.command,BT1RxMsg.length);
+    sprintf(string, "[app_BT_com][bt_BuildHeader] header: 0x%02X 0x%04X\n",BT1RxMsg.command1,BT1RxMsg.length);
     xQueueSend(pPrintQueue, string, 0);
 #endif
     return 1;
@@ -1440,7 +1440,7 @@ static int bt_csCorrect(void)
   ring_buffer_peek(&BT1RingbufRx, &rxdByte[0], 2);
   ring_buffer_peek(&BT1RingbufRx, &rxdByte[1], 3);
 //  BT1RxMsg.CS = rxdByte[0];
-  CScalc = 0x02 ^ BT1RxMsg.command ^ rxdByte[0] ^ rxdByte[1];
+  CScalc = 0x02 ^ BT1RxMsg.command1 ^ rxdByte[0] ^ rxdByte[1];
   for (unsigned int i = 0; i < (BT1RxMsg.length); i++)
   {
     CScalc = CScalc ^ BT1RxMsg.DU[i];
@@ -1825,7 +1825,7 @@ void rsv_data_handler(uint8_t * buf, uint8_t sensor_number, uint8_t data_format)
 
   for(uint8_t j = 0; j < NUMBER_OF_BT_PACKETS; j++){
     uint16_t start_pos = PACKET_START_POS + 7;
-		// 1e byte: 			command "IMU_SENSOR_MODULE_REQ_SEND_DATA"
+		// 1e byte: 			command1 "IMU_SENSOR_MODULE_REQ_SEND_DATA"
 		// 2e & 3e byte:		packet_send_nr
 		// 3e 4e 5e 6e byte:	timestamp
 

@@ -49,10 +49,10 @@ extern QueueHandle_t pPrintQueue;
 
 uint8_t previous_command = 0;
 imu_module *imu = NULL;
-uint8_t previous_connected_modules [6];
+uint8_t previous_connected_modules2 [6];
 uint8_t sync_enable;
 
-char command;
+char command2;
 
 void terminalComManagerThread(const void *params);
 
@@ -102,10 +102,10 @@ void terminalComManagerThread(const void *params)
 //			sprintf(string, "%u [app_terminal_com] [terminalComManagerThread] Data received via Terminal: 0x%2X\n",(unsigned int) HAL_GetTick(),command);
 //    	      xQueueSend(pPrintQueue, string, 0);
 //#endif
-			if(command == 0x0A) return;
+			if(command2 == 0x0A) return;
 			if(previous_command != 0)
 			{
-				switch(command)
+				switch(command2)
 				{
 					case 0x31: // "1"
 					{
@@ -156,10 +156,10 @@ void terminalComManagerThread(const void *params)
 						sprintf(string, "Please enter a number between 1 and 6!\n");
 			            xQueueSend(pPrintQueue, string, 0);
 				}
-				command = previous_command;
+				command2 = previous_command;
 				previous_command = 0;
 			}
-			switch(command)
+			switch(command2)
 			{
 				case 0x30:  // "0": Print MENU
 				{
@@ -505,7 +505,7 @@ static int com_Build()
 //  	    xQueueSend(pPrintQueue, string, 0);
 //#endif
 	    }
-	    command = rxdByte;
+	    command2 = rxdByte;
         return 1;
     }
     return 0;
