@@ -51,7 +51,7 @@
   */
 #define HAL_MODULE_ENABLED  
 
-/* #define HAL_ADC_MODULE_ENABLED   */
+// #define HAL_ADC_MODULE_ENABLED
 /* #define HAL_FDCAN_MODULE_ENABLED */
 /* #define HAL_CEC_MODULE_ENABLED   */
 /* #define HAL_COMP_MODULE_ENABLED   */
@@ -96,7 +96,7 @@
 /* #define HAL_DSI_MODULE_ENABLED   */
 /* #define HAL_JPEG_MODULE_ENABLED   */
 /* #define HAL_MDIOS_MODULE_ENABLED   */
-/* #define HAL_EXTI_MODULE_ENABLED */ //To enable?
+// #define HAL_EXTI_MODULE_ENABLED  //To enable?
 #define HAL_GPIO_MODULE_ENABLED
 #define HAL_DMA_MODULE_ENABLED
 #define HAL_MDMA_MODULE_ENABLED
