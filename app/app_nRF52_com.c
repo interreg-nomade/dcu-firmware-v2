@@ -133,6 +133,9 @@ void nRF52ComManagerThread(const void *params)
 //      	  xQueueSend(pPrintQueue, string, 0);
 //#endif
     	  int32_t data[20];
+
+    	  int16_t test_data[3*3];
+
     	  uint64_t timestamp;
     	  int value = 0;
     	  uint16_t start_pos = 5;
@@ -164,8 +167,11 @@ void nRF52ComManagerThread(const void *params)
         	    // data[3] = rotVectors.k
 //  	    	    data[g] = ((nRF52RxMsg.DU[start_pos + g*4] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 1] << 16) |
 //  	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 2] << 8) | nRF52RxMsg.DU[start_pos + g*4 + 3]);
-  	    	    data[g] = ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
+
+  	    		int16_t data_temp = ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
   	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*4]);
+  	    	    data[g] = (int32_t) data_temp;
+
   	    	    //data[g] = (float)data[g]/(float)(1<<30);
   	    	  }
   	    	  for (uint8_t g = 0x1C; g > 0x14; g--)
@@ -216,9 +222,35 @@ void nRF52ComManagerThread(const void *params)
   	    	    // data[11] = magnetometer.y
   	    	    // data[12] = magnetometer.z
 //  	    	    data[4 + g] = ((nRF52RxMsg.DU[start_pos + g*2] << 8) | nRF52RxMsg.DU[start_pos + g*2 + 1]);
-  	    	    data[4 + g] = ((nRF52RxMsg.DU[start_pos + g*2 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
+
+  	    		int16_t data_temp = (int16_t) ((nRF52RxMsg.DU[start_pos + g*2 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
+  	    	    data[4 + g] = (int32_t) data_temp;
+
+				test_data[g] = ((nRF52RxMsg.DU[start_pos + g*2 +1 ] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
+
   	    	    //data[g] = (float)data[g]/(float)(1<<30);
   	    	  }
+
+#define RAW_Q_FORMAT_GYR_COMMA_BITS         5           // Number of bits used for comma part of raw data.
+#define RAW_Q_FORMAT_ACC_COMMA_BITS         10          // Number of bits used for comma part of raw data.
+	    	    float test_gyro_x = ((float)test_data[3] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
+	    	    float test_gyro_y = ((float)test_data[4] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
+	    	    float test_gyro_z = ((float)test_data[5] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
+
+	    	    float test_accel_x = ((float)test_data[0] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+	    	  	float test_accel_y = ((float)test_data[1] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+	    		float test_accel_z = ((float)test_data[2] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+
+#if PRINTF_nRF52_COMMANAGER
+          	  //sprintf(string, "[app_nRF52_com] debug jona: accel x: %f - y: %f - z %f\n", test_accel_x, test_accel_y, test_accel_z);
+          	  //xQueueSend(pPrintQueue, string, 0);
+          	  /** TODO: Tot hier komt de data goed toe **/
+
+          	  sprintf(string, "[app_nRF52_com] debug jona: gyro x: %f - y: %f - z %f", test_gyro_x, test_gyro_y, test_gyro_z);
+          	  xQueueSend(pPrintQueue, string, 0);
+#endif
+
+
   	    	  for (uint8_t g = 0x1E; g > 0x16; g--)
   	    	  {
      	        timestamp = (timestamp << 8) | nRF52RxMsg.DU[g];
@@ -1416,12 +1448,15 @@ static void BLEmoduleDataToSensorEvent1(int32_t data[20], imu_100Hz_data_t *sens
    sensorEvent->rotVectors1.i    = data[1];
    sensorEvent->rotVectors1.j    = data[2];
    sensorEvent->rotVectors1.k    = data[3];
-   sensorEvent->gyroscope1.x     = data[4];
-   sensorEvent->gyroscope1.y     = data[5];
-   sensorEvent->gyroscope1.z     = data[6];
-   sensorEvent->accelerometer1.x = data[7];
-   sensorEvent->accelerometer1.y = data[8];
-   sensorEvent->accelerometer1.z = data[9];
+
+   sensorEvent->gyroscope1.x     = data[7];
+   sensorEvent->gyroscope1.y     = data[8];
+   sensorEvent->gyroscope1.z     = data[9];
+
+   sensorEvent->accelerometer1.x = data[4];
+   sensorEvent->accelerometer1.y = data[5];
+   sensorEvent->accelerometer1.z = data[6];
+
    sensorEvent->magnetometer1.x  = data[10];
    sensorEvent->magnetometer1.y  = data[11];
    sensorEvent->magnetometer1.z  = data[12];

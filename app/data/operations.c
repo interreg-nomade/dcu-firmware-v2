@@ -1150,6 +1150,8 @@ int datatypeToRaw_imu_gyro_acc_mag(imu_100Hz_data_t * pImu, unsigned char *dest)
 //  imu.magnetometer1.x  *= scale;
 //  imu.magnetometer1.y  *= scale;
 //  imu.magnetometer1.z  *= scale;
+
+  /*
   imu.accelerometer1.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
   imu.accelerometer1.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
   imu.accelerometer1.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
@@ -1159,9 +1161,25 @@ int datatypeToRaw_imu_gyro_acc_mag(imu_100Hz_data_t * pImu, unsigned char *dest)
   imu.magnetometer1.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
   imu.magnetometer1.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
   imu.magnetometer1.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  */
 
+  imu.gyroscope1.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));// * 10;
+  imu.gyroscope1.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));// * 10;
+  imu.gyroscope1.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));// * 10;
 
+  imu.accelerometer1.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer1.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
+  imu.accelerometer1.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
 
+  imu.magnetometer1.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer1.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+  imu.magnetometer1.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
+
+  /*
+  sprintf(string, "%u [operations] [Jona Test] Accel: %f %f %f\n Gyro: %f %f %f\n",
+		  imu.accelerometer1.x, imu.accelerometer1.y, imu.accelerometer1.z, imu.gyroscope1.x, imu.gyroscope1.y, imu.gyroscope1.z);
+  xQueueSend(pPrintQueue, string, 0);
+*/
 
 
   short tmp = 0; /* Temporary variable used for the typecast and shift */
@@ -2302,4 +2320,3 @@ int rawToStruct_imu_6axis(unsigned int * source, unsigned int size, unsigned int
 //
 //	return 1;
 //}
-
