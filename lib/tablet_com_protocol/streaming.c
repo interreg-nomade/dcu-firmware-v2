@@ -131,21 +131,21 @@ void stream_send(streamingPort_handler_t * pHandler)
 	stream_parse_packet(&packet, buf, &el);
 	pHandler->txData(buf, el);  // this will call function UART3_WriteBytes(uint8_t * data, uint32_t n)
 	pHandler->comState = streamingPort_COM_AVAILABLE; 	/* Pass state of resource as Available, if resource is used by several tasks use of a mutex must be considered */
-//#if PRINTF_STREAMING_UPLINK_DBG
-////    sprintf(string, "%u [streaming] [stream_send] Sending: ",(unsigned int) HAL_GetTick());
-//    sprintf(string, "%u Send: ",(unsigned int) HAL_GetTick()); // shorter sentence so that all data can be printed
-//	char DUString[3];
-//	for (unsigned int i = 0; i<el; i++)
-//	{
-//	  if (strlen(string) < 147)
-//	  {
-//      	  sprintf(DUString, "%02X",buf[i]);
-//      	  strcat(string, DUString);
-//	  }
-//	}
-// 	strcat(string,"\n");
-//	xQueueSend(pPrintQueue, string, 0);
-//#endif
+/*#if PRINTF_STREAMING_UPLINK_DBG
+//    sprintf(string, "%u [streaming] [stream_send] Sending: ",(unsigned int) HAL_GetTick());
+    sprintf(string, "%u Send: ",(unsigned int) HAL_GetTick()); // shorter sentence so that all data can be printed
+	char DUString[3];
+	for (unsigned int i = 0; i<el; i++)
+	{
+	  if (strlen(string) < 147)
+	  {
+      	  sprintf(DUString, "%02X",buf[i]);
+      	  strcat(string, DUString);
+	  }
+	}
+ 	strcat(string,"\n");
+	xQueueSend(pPrintQueue, string, 0);
+#endif*/
   }
 }
 

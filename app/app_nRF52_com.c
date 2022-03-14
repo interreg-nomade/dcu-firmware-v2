@@ -168,9 +168,9 @@ void nRF52ComManagerThread(const void *params)
 //  	    	    data[g] = ((nRF52RxMsg.DU[start_pos + g*4] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 1] << 16) |
 //  	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 2] << 8) | nRF52RxMsg.DU[start_pos + g*4 + 3]);
 
-  	    		int16_t data_temp = ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
+  	    		int32_t data_temp = (int32_t) ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
   	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*4]);
-  	    	    data[g] = (int32_t) data_temp;
+  	    	    data[g] = data_temp;
 
   	    	    //data[g] = (float)data[g]/(float)(1<<30);
   	    	  }
@@ -181,6 +181,21 @@ void nRF52ComManagerThread(const void *params)
 	    	  //timestamp = nRF52RxMsg.DU[15] | (nRF52RxMsg.DU[16] << 8) | (nRF52RxMsg.DU[17] << 16) | (nRF52RxMsg.DU[18] << 24 |);
 	    	  //sprintf(string, "[app_nRF52_com] sample frequency: %u \n", (unsigned int) imu_array[0]->sampleFrequency);
 	    	  //xQueueSend(pPrintQueue, string, 0);
+
+  	    	  /*
+#if PRINTF_nRF52_COMMANAGER
+#define FIXED_POINT_FRACTIONAL_BITS_QUAT    30          // Number of bits used for comma part of quaternion data
+  	    	  float quatw = ((float)data[0] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+  	    	  float quati = ((float)data[1] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+  	    	  float quatj = ((float)data[2] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+  	    	  float quatk = ((float)data[3] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+
+          	  sprintf(string, "[app_nRF52_com] debug jona: real: %f - i: %f - j: %f - k: %f\n", quatw, quati, quatj, quatk);
+          	  xQueueSend(pPrintQueue, string, 0);
+
+          	  // OK - data komt hier goed toe en decoding OK
+#endif
+*/
   	          break;
   	        }
   	        case 0x02:
@@ -231,6 +246,7 @@ void nRF52ComManagerThread(const void *params)
   	    	    //data[g] = (float)data[g]/(float)(1<<30);
   	    	  }
 
+  	    	  /*
 #define RAW_Q_FORMAT_GYR_COMMA_BITS         5           // Number of bits used for comma part of raw data.
 #define RAW_Q_FORMAT_ACC_COMMA_BITS         10          // Number of bits used for comma part of raw data.
 	    	    float test_gyro_x = ((float)test_data[3] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
@@ -240,14 +256,15 @@ void nRF52ComManagerThread(const void *params)
 	    	    float test_accel_x = ((float)test_data[0] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
 	    	  	float test_accel_y = ((float)test_data[1] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
 	    		float test_accel_z = ((float)test_data[2] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+*/
 
 #if PRINTF_nRF52_COMMANAGER
           	  //sprintf(string, "[app_nRF52_com] debug jona: accel x: %f - y: %f - z %f\n", test_accel_x, test_accel_y, test_accel_z);
           	  //xQueueSend(pPrintQueue, string, 0);
           	  /** TODO: Tot hier komt de data goed toe **/
 
-          	  sprintf(string, "[app_nRF52_com] debug jona: gyro x: %f - y: %f - z %f", test_gyro_x, test_gyro_y, test_gyro_z);
-          	  xQueueSend(pPrintQueue, string, 0);
+          	  //sprintf(string, "[app_nRF52_com] debug jona: gyro x: %f - y: %f - z %f", test_gyro_x, test_gyro_y, test_gyro_z);
+          	  //xQueueSend(pPrintQueue, string, 0);
 #endif
 
 
@@ -1468,12 +1485,15 @@ static void BLEmoduleDataToSensorEvent2(int32_t data[20], imu_100Hz_data_t *sens
    sensorEvent->rotVectors2.i    = data[1];
    sensorEvent->rotVectors2.j    = data[2];
    sensorEvent->rotVectors2.k    = data[3];
-   sensorEvent->gyroscope2.x     = data[4];
-   sensorEvent->gyroscope2.y     = data[5];
-   sensorEvent->gyroscope2.z     = data[6];
-   sensorEvent->accelerometer2.x = data[7];
-   sensorEvent->accelerometer2.y = data[8];
-   sensorEvent->accelerometer2.z = data[9];
+
+   sensorEvent->gyroscope2.x     = data[7];
+   sensorEvent->gyroscope2.y     = data[8];
+   sensorEvent->gyroscope2.z     = data[9];
+
+   sensorEvent->accelerometer2.x = data[4];
+   sensorEvent->accelerometer2.y = data[5];
+   sensorEvent->accelerometer2.z = data[6];
+
    sensorEvent->magnetometer2.x  = data[10];
    sensorEvent->magnetometer2.y  = data[11];
    sensorEvent->magnetometer2.z  = data[12];
