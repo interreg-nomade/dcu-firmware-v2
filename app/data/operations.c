@@ -2256,11 +2256,11 @@ static void decode_raw_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
     out->magnetometer1.y = ((float)in->magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
     out->magnetometer1.z = ((float)in->magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
 
-	sprintf(string, "[operations] gyro: %f %f %f - accel: %f %f %f - mag: %f %f %f \n",
+	/*sprintf(string, "[operations] gyro: %f %f %f - accel: %f %f %f - mag: %f %f %f \n",
 			out->gyroscope1.x, out->gyroscope1.y, out->gyroscope1.z,
 			out->accelerometer1.x, out->accelerometer1.y, out->accelerometer1.z,
 			out->magnetometer1.x, out->magnetometer1.y, out->magnetometer1.z);
-	xQueueSend(pPrintQueue, string, 0);
+	xQueueSend(pPrintQueue, string, 0);*/
 }
 
 static void decode_raw_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)

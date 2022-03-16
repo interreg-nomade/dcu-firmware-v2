@@ -10,6 +10,7 @@
 #include "stm32h7xx_hal.h"
 #include "usart.h"
 #include "nRF52_driver.h"
+#include "../app/data/structures.h"
 
 #define PRINTF_nRF52_DRIVER 1
 
@@ -122,6 +123,17 @@ void comm_set_frequency(uint8_t freq)
 void comm_start_meas()
 {
     send_data(COMM_CMD_START, NULL, 0);
+}
+
+void comm_start_meas_w_time(stm32_datetime_t *dateTime)
+{
+
+	time_t usr_time = mktime(dateTime);
+	usr_time *= 1000; // Convert to ms
+
+	stm32_time_t time = (stm32_time_t) usr_time;
+
+	send_data(COMM_CMD_START, &time, sizeof(time));
 }
 
 // WORKING

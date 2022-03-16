@@ -170,21 +170,14 @@ void project_init(void)
 	ssd1306_nomade();
 
 	/** Battery voltage measurements **/
-	// measBatt_Init();
+	measBatt_Init();
 	float battVoltage;
-	// battVoltage = measBatt();
-	battVoltage = 3.99f;
-
-	/*
-#if PRINTF_APP_INIT
-      sprintf(string, "%u [app_init] [initThread] Battery: %f", battVoltage);
-      xQueueSend(pPrintQueue, string, 0);
-#endif*/
+	measBatt(&battVoltage);
 
 	osDelay(2000);
 
 	ssd1306_battery();
-	dcu_set_text_battery2("x.xx V");
+	dcu_set_text_battery2(&battVoltage);
 	osDelay(2000);
 }
 
@@ -461,7 +454,17 @@ void initThread(const void * params)
                            xQueueSend(pPrintQueue, "[app_init] [initThread] Start module measurement.\n", 0);
 #endif
              	           osDelay(8000);
-             	           comm_start_meas();
+
+						  stm32_datetime_t datetime;
+						  memset(&datetime, 0, sizeof(stm32_datetime_t));
+						  datetime.tm_year = 2022;
+						  datetime.tm_mon = 2;
+						  datetime.tm_mday = 3;
+						  datetime.tm_hour = 10;
+						  datetime.tm_min = 10;
+						  datetime.tm_sec = 10;
+
+             	           comm_start_meas(&datetime);
 
 						   /** From now on, start displaying that measurement is going on **/
              	           oledThread_init();

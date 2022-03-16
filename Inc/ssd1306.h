@@ -177,7 +177,7 @@ void ssd1306_GetDiff(uint8_t* buf1, uint8_t* buf2, uint8_t* diff);
 void ssd1306_nomade();
 void dcu_intro_text();
 void dcu_set_text(char* text);
-void dcu_set_text_battery2(char* text);
+void dcu_set_text_battery2(float *voltage);
 void dcu_set_text_small(char* text);
 void dcu_set_text_2_lines(char* text1, char* text2);
 

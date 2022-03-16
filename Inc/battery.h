@@ -24,14 +24,16 @@
 #ifndef __BATTERY_H
 #define __BATTERY_H
 
-#ifdef HAL_ADC_MODULE_ENABLED
+// #include "stm32h7xx_hal_conf.h"
+
+//#ifdef HAL_ADC_MODULE_ENABLED
 
 void measBatt_Init();
-float measBatt(void);
+void measBatt(float *value);
 
 static void MX_ADC3_Init(void);
 
 
-#endif
+//#endif
 
 #endif

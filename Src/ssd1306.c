@@ -722,14 +722,16 @@ void dcu_set_text(char* text)
 
 }
 
-void dcu_set_text_battery2(char* text)
+void dcu_set_text_battery2(float *voltage)
 {
     uint8_t y = SSD1306_HEIGHT / 2;
-    //ssd1306_Fill(Black);
+
+    char string[10];
+    sprintf(string, "%.2f V", *voltage);
 
     #ifdef SSD1306_INCLUDE_FONT_11x18
     ssd1306_SetCursor(50, y);
-    ssd1306_WriteString(text, Font_11x18, White);
+    ssd1306_WriteString(string, Font_11x18, White);
     #endif
 
 	ssd1306_UpdateScreen();

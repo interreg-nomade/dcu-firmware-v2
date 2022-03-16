@@ -298,11 +298,14 @@
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="fr.ac6.managedbuild.config.gnu.cross.exe.debug.1005534981;fr.ac6.managedbuild.config.gnu.cross.exe.debug.1005534981.;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.941189984;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1193449404">
+			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="fr.ac6.managedbuild.config.gnu.cross.exe.release.1231959799;fr.ac6.managedbuild.config.gnu.cross.exe.release.1231959799.;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.941189984;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1193449404">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="fr.ac6.managedbuild.config.gnu.cross.exe.debug.1005534981;fr.ac6.managedbuild.config.gnu.cross.exe.debug.1005534981.;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.941189984;fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1193449404">
-			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1517298941;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1517298941.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1557771952;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.881944955">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>
