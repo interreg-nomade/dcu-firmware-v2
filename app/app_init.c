@@ -453,18 +453,38 @@ void initThread(const void * params)
 #if PRINTF_APP_INIT
                            xQueueSend(pPrintQueue, "[app_init] [initThread] Start module measurement.\n", 0);
 #endif
-             	           osDelay(8000);
+
+
+             	          osDelay(8000);
+
+
+             	          dcu_set_text_2_lines("Connect", "Tablet");
+
+             	          // Wait until tablet connection
+             	          while(tablet_get_time_received() == 0);
+             	          tablet_set_time_received(0);
 
 						  stm32_datetime_t datetime;
 						  memset(&datetime, 0, sizeof(stm32_datetime_t));
-						  datetime.tm_year = 2022;
-						  datetime.tm_mon = 2;
-						  datetime.tm_mday = 3;
-						  datetime.tm_hour = 10;
-						  datetime.tm_min = 10;
-						  datetime.tm_sec = 10;
 
-             	           comm_start_meas(&datetime);
+						  // Get time from RTC in milliseconds
+						  stm32_time_t epochNow_Ms;
+						  app_rtc_get_unix_epoch_ms(&epochNow_Ms); /* Get the epoch unix time from the RTC */
+						  // Convert to seconds
+						  uint64_t epoch_AD_s = epochNow_Ms/1000;
+						  // Convert to datetime struct
+						  datetime = *localtime(&epoch_AD_s);
+
+#if PRINTF_APP_INIT
+						  strftime(string, 150, "[APP_INIT] %A %c", &datetime);
+						  //sprintf(string, "[APP_INIT] h %d m %d s %d - day %d month %d year %d\n",
+							//	  datetime.tm_hour, datetime.tm_min, datetime.tm_sec, datetime.tm_mday, datetime.tm_mday, datetime.tm_year);
+						  xQueueSend(pPrintQueue, string, 0);
+#endif
+
+
+						  // Start measurement
+						  comm_start_meas_w_time(&datetime);
 
 						   /** From now on, start displaying that measurement is going on **/
              	           oledThread_init();

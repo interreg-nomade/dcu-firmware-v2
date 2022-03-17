@@ -10,6 +10,7 @@
 #define APP_TABLET_COM_H_
 
 #include <stdint.h>
+#include "stdbool.h"
 
 typedef struct {
 	unsigned int isOnline;
@@ -33,5 +34,8 @@ int tablet_com_set_state(unsigned int state);
 void app_tablet_com_notify(uint32_t notValue);
 void app_tablet_com_notify_from_isr(uint32_t notValue);
 
+// UTC Time
+bool tablet_get_time_received(void);
+void tablet_set_time_received(bool state);
 
 #endif /* APP_TABLET_COM_H_ */

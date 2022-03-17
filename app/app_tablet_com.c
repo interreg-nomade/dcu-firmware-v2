@@ -60,6 +60,8 @@
 #include "common.h"
 #include "imu_com.h"
 
+bool tablet_time_received = 0;
+
 #define PRINT_APP_TABLET_COM_DBG_MSG 1
 #if PRINT_APP_TABLET_COM_DBG_MSG
 #define PRINT_APP_TABLET_RECEIVE_WD				0
@@ -502,6 +504,9 @@ void cpl_ServiceHandler(cpl_msg_t * pMsg, fc_tx_handler_t * pfcTxHandler, fc_rx_
 
   	      app_rtc_print_RTCdateTime();
   	      compare_RTCunixtime_Epoch();
+
+		  // Notify to app_init that UTC time has been received
+  	      tablet_time_received = 1;
 
 //  	      ds3231_time_t getds3231time;
 //  	      struct tm RTCdateTime;
@@ -1761,3 +1766,15 @@ void tablet_com_send_watchdog_msg(char ad)
 }
 
 //watchdogTimerCallback
+
+
+bool tablet_get_time_received(void)
+{
+	return tablet_time_received;
+}
+
+void tablet_set_time_received(bool state)
+{
+	tablet_time_received = state;
+}
+
