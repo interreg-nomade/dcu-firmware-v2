@@ -17,7 +17,7 @@
 #include "app_terminal_com.h" // to be able to print module overview data with module_status_overview()
 
 
-#define RAW_DBG_PRINTF 1
+#define RAW_DBG_PRINTF 0
 #define RAW_CONFIGURATION_TEST 0
 
 extern imu_module imu_1;

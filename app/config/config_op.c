@@ -26,9 +26,9 @@
 
 #define assert( x ) if( ( x ) == 0 ) {return 0;}
 
-#define CONFIG_LINK_PRINT_INFOS 		1
-#define CONFIG_DATA_ALLOC_PRINT_INFOS 	1
-#define CONFIG_OP_DBG_PRINT 			1
+#define CONFIG_LINK_PRINT_INFOS 		0
+#define CONFIG_DATA_ALLOC_PRINT_INFOS 	0
+#define CONFIG_OP_DBG_PRINT 			0
 
 
 extern char string[];

@@ -31,7 +31,7 @@ extern QueueHandle_t pPrintQueue;
 
 void BLEmodule5_task_init()
 {
-  osThreadDef(BLEmodule5Task, BLE5Task, osPriorityAboveNormal, 0, 1024); //Declaration of BLEmodule task
+  osThreadDef(BLEmodule5Task, BLE5Task, osPriorityNormal, 0, 1024); //Declaration of BLEmodule task
   BLEmodule5TaskHandle = osThreadCreate(osThread(BLEmodule5Task), NULL); // Start BLEmodule task
 }
 
@@ -75,10 +75,6 @@ static void BLEmodule5_init(void)
   {
 	xQueueSend(pPrintQueue, "[APP_BLEmodule5] [BLEmodule5_init] Error creating BLE module 5 event queue.\n", 0);
   }
-  else
-  {
-    xQueueSend(pPrintQueue, "[APP_BLEmodule5] [BLEmodule5_init] BLE module 5 event queue created.\n", 0);
-  }
 #endif
 }
 
@@ -94,10 +90,10 @@ int BLEmodule5_Config_Init()
   int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_BT); // Get number of BLE modules from config
   if (n >= 1)
   { // BLE modules are available, link the BLE module pointer handler to instrument_config_t structure from decodedConfig structure
-#if PRINTF_APP_BLEMODULE5_DBG
-    sprintf(string, "[APP_BLEmodule5] [BLEmodule5_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
-    xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if PRINTF_APP_BLEMODULE5_DBG
+//    sprintf(string, "[APP_BLEmodule5] [BLEmodule5_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
+//    xQueueSend(pPrintQueue, string, 0);
+//#endif
 	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule5Instrument, SETUP_PRM_COMM_METHOD_BT);
   }
   else

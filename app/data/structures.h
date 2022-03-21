@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+
+
 #define MAX_NUMBER_OF_DISTANCE_SENSORS 32
 #define DEFAULT_DISTANCE_NODE_
 
@@ -308,6 +310,8 @@ typedef struct
 		};
 	};
 }usbad_data_t;
+
+
 
 
 #endif /* DATA_STRUCTURES_H_ */

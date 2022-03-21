@@ -217,6 +217,10 @@ typedef struct
     stm32_compass_t compass;
 } stm32_raw_t;
 
+typedef struct tm stm32_datetime_t;
+typedef uint64_t stm32_time_t;
+
+
 // Initialize library: pass event handler + uart rx/tx functions
 //void comm_init(const ic_init_t* p_init, const ic_uart_t* p_uart);
 
@@ -243,6 +247,9 @@ void comm_set_frequency(uint8_t freq);
 
 // Start measurement
 void comm_start_meas();
+
+// Start measurement including time stamp
+void comm_start_meas_w_time(stm32_datetime_t *dateTime);
 
 // Stop measurement
 void comm_stop_meas();

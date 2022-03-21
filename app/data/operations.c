@@ -24,12 +24,6 @@ extern QueueHandle_t pPrintQueue;
 
 #define PRINTF_OPERATIONS_DBG 1
 
-#define FIXED_POINT_FRACTIONAL_BITS_QUAT    30          // Number of bits used for comma part of quaternion data
-#define RAW_Q_FORMAT_GYR_COMMA_BITS         5           // Number of bits used for comma part of raw data.
-#define RAW_Q_FORMAT_ACC_COMMA_BITS         10          // Number of bits used for comma part of raw data.
-#define RAW_Q_FORMAT_CMP_COMMA_BITS         4
-
-
 
 /* In general: two types of operations:
  * 1. Structure to ASCII
@@ -777,10 +771,11 @@ int datatypeToRaw_imu_quat(imu_100Hz_data_t * pImu, unsigned char *dest)
 //  imu.rotVectors1.i    *= rotScale;
 //  imu.rotVectors1.j    *= rotScale;
 //  imu.rotVectors1.k    *= rotScale;
-  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+
+// Decode quaternions
+  decode_quat_50hz(&imu, &imu);
+
+// Send to tablet
   short tmp = 0; /* Temporary variable used for the type cast and shift */
 	tmp = (short) imu.rotVectors1.real;
 	dest[0] = tmp >> 8 & 0xFF;
@@ -794,12 +789,14 @@ int datatypeToRaw_imu_quat(imu_100Hz_data_t * pImu, unsigned char *dest)
 	tmp = (short) imu.rotVectors1.k;
 	dest[6] = tmp >> 8 & 0xFF;
 	dest[7] = tmp & 0xFF;
+
 //#if PRINTF_OPERATIONS_DBG
 //	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
 //												(unsigned int) HAL_GetTick(),
 //												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
 //  xQueueSend(pPrintQueue, string, 0);
 //#endif
+
   return 8;
 }
 
@@ -985,14 +982,10 @@ int datatypeToRaw_imu_quat_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
 //  imu.rotVectors2.i    *= rotScale;
 //  imu.rotVectors2.j    *= rotScale;
 //  imu.rotVectors2.k    *= rotScale;
-  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.real = ((float) imu.rotVectors2.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.i    = ((float) imu.rotVectors2.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.j    = ((float) imu.rotVectors2.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.k    = ((float) imu.rotVectors2.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+
+  // Decoding
+    decode_quat_100hz(&imu, &imu);
+
   short tmp = 0; /* Temporary variable used for the type cast and shift */
   tmp = (short) imu.rotVectors1.real;
   dest[0] = tmp >> 8 & 0xFF;
@@ -1018,12 +1011,14 @@ int datatypeToRaw_imu_quat_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
   tmp = (short) imu.rotVectors2.k;
   dest[14] = tmp >> 8 & 0xFF;
   dest[15] = tmp & 0xFF;
+
 //#if PRINTF_OPERATIONS_DBG
 //	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
 //												(unsigned int) HAL_GetTick(),
 //												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
 //  xQueueSend(pPrintQueue, string, 0);
 //#endif
+
   return 16;
 }
 
@@ -1042,10 +1037,10 @@ int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest)
 //  imu.rotVectors1.i    *= rotScale;
 //  imu.rotVectors1.j    *= rotScale;
 //  imu.rotVectors1.k    *= rotScale;
-  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+
+  // Decoding
+  decode_quat_50hz(&imu, &imu);
+
   short tmp = 0; /* Temporary variable used for the type cast and shift */
   tmp = (short) imu.rotVectors1.real;
   dest[0] = tmp >> 8 & 0xFF;
@@ -1059,12 +1054,14 @@ int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest)
   tmp = (short) imu.rotVectors1.k;
   dest[6] = tmp >> 8 & 0xFF;
   dest[7] = tmp & 0xFF;
-#if PRINTF_OPERATIONS_DBG
-  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
-												(unsigned int) HAL_GetTick(),
-												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
-  xQueueSend(pPrintQueue, string, 0);
-#endif
+
+//#if PRINTF_OPERATIONS_DBG
+//  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
+//												(unsigned int) HAL_GetTick(),
+//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
+
   return 8;
 }
 
@@ -1087,14 +1084,9 @@ int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *de
 //  imu.rotVectors2.i    *= rotScale;
 //  imu.rotVectors2.j    *= rotScale;
 //  imu.rotVectors2.k    *= rotScale;
-  imu.rotVectors1.real = ((float) imu.rotVectors1.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.i    = ((float) imu.rotVectors1.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.j    = ((float) imu.rotVectors1.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors1.k    = ((float) imu.rotVectors1.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.real = ((float) imu.rotVectors2.real / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.i    = ((float) imu.rotVectors2.i / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.j    = ((float) imu.rotVectors2.j / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
-  imu.rotVectors2.k    = ((float) imu.rotVectors2.k / (float) (1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * 10000;
+
+  // Decoding
+  decode_quat_100hz(&imu, &imu);
 
   short tmp = 0; /* Temporary variable used for the type cast and shift */
   tmp = (short) imu.rotVectors1.real;
@@ -1121,12 +1113,14 @@ int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *de
   tmp = (short) imu.rotVectors2.k;
   dest[14] = tmp >> 8 & 0xFF;
   dest[15] = tmp & 0xFF;
+
 //#if PRINTF_OPERATIONS_DBG
 //	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
 //												(unsigned int) HAL_GetTick(),
 //												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
 //  xQueueSend(pPrintQueue, string, 0);
 //#endif
+
   return 16;
 }
 
@@ -1150,19 +1144,9 @@ int datatypeToRaw_imu_gyro_acc_mag(imu_100Hz_data_t * pImu, unsigned char *dest)
 //  imu.magnetometer1.x  *= scale;
 //  imu.magnetometer1.y  *= scale;
 //  imu.magnetometer1.z  *= scale;
-  imu.accelerometer1.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.accelerometer1.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.accelerometer1.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.gyroscope1.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.gyroscope1.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.gyroscope1.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.magnetometer1.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.magnetometer1.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.magnetometer1.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
 
-
-
-
+  // Decode data
+  decode_raw_50hz(&imu, &imu);
 
   short tmp = 0; /* Temporary variable used for the typecast and shift */
 // in future, use the folowing union
@@ -1233,25 +1217,8 @@ return 0;
 //  imu.magnetometer2.y  *= scale;
 //  imu.magnetometer2.z  *= scale;
 
-  imu.accelerometer1.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.accelerometer1.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.accelerometer1.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.gyroscope1.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.gyroscope1.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.gyroscope1.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.magnetometer1.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.magnetometer1.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.magnetometer1.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.accelerometer2.x = ((float) imu.accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.accelerometer2.y = ((float) imu.accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.accelerometer2.z = ((float) imu.accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * 1000;
-  imu.gyroscope2.x     = ((float) imu.gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.gyroscope2.y     = ((float) imu.gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.gyroscope2.z     = ((float) imu.gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * 10;
-  imu.magnetometer2.x  = ((float) imu.magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.magnetometer2.y  = ((float) imu.magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-  imu.magnetometer2.z  = ((float) imu.magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * 10000;
-
+  // Decoding
+  decode_raw_100hz(&imu, &imu);
 
   short tmp = 0; /* Temporary variable used for the typecast and shift */
 // in future, use the folowing union
@@ -2303,3 +2270,71 @@ int rawToStruct_imu_6axis(unsigned int * source, unsigned int size, unsigned int
 //	return 1;
 //}
 
+static void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+{
+    out->rotVectors1.real = ((float)in->rotVectors1.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.i = ((float)in->rotVectors1.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.j = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.k = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+}
+
+static void decode_quat_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+{
+    out->rotVectors1.real = ((float)in->rotVectors1.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.i = ((float)in->rotVectors1.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.j = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.k = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+
+    out->rotVectors2.real = ((float)in->rotVectors2.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors2.i = ((float)in->rotVectors2.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors2.j = ((float)in->rotVectors2.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors2.k = ((float)in->rotVectors2.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+}
+
+static void decode_raw_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+{
+    out->gyroscope1.x = ((float)in->gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+    out->gyroscope1.y = ((float)in->gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+    out->gyroscope1.z = ((float)in->gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+
+    out->accelerometer1.x = ((float)in->accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+    out->accelerometer1.y = ((float)in->accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+    out->accelerometer1.z = ((float)in->accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+
+    out->magnetometer1.x = ((float)in->magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+    out->magnetometer1.y = ((float)in->magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+    out->magnetometer1.z = ((float)in->magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+
+	/*sprintf(string, "[operations] gyro: %f %f %f - accel: %f %f %f - mag: %f %f %f \n",
+			out->gyroscope1.x, out->gyroscope1.y, out->gyroscope1.z,
+			out->accelerometer1.x, out->accelerometer1.y, out->accelerometer1.z,
+			out->magnetometer1.x, out->magnetometer1.y, out->magnetometer1.z);
+	xQueueSend(pPrintQueue, string, 0);*/
+}
+
+static void decode_raw_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+{
+    out->gyroscope1.x = ((float)in->gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+    out->gyroscope1.y = ((float)in->gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+    out->gyroscope1.z = ((float)in->gyroscope1.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+
+    out->accelerometer1.x = ((float)in->accelerometer1.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+    out->accelerometer1.y = ((float)in->accelerometer1.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+    out->accelerometer1.z = ((float)in->accelerometer1.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+
+    out->magnetometer1.x = ((float)in->magnetometer1.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+    out->magnetometer1.y = ((float)in->magnetometer1.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+    out->magnetometer1.z = ((float)in->magnetometer1.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+
+    out->gyroscope2.x = ((float)in->gyroscope2.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+    out->gyroscope2.y = ((float)in->gyroscope2.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+    out->gyroscope2.z = ((float)in->gyroscope2.z / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
+
+    out->accelerometer2.x = ((float)in->accelerometer2.x / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+    out->accelerometer2.y = ((float)in->accelerometer2.y / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+    out->accelerometer2.z = ((float)in->accelerometer2.z / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS)) * NRF_ACCEL_APP_SCALE_FACTOR;
+
+    out->magnetometer2.x = ((float)in->magnetometer2.x / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+    out->magnetometer2.y = ((float)in->magnetometer2.y / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+    out->magnetometer2.z = ((float)in->magnetometer2.z / (float)(1 << RAW_Q_FORMAT_CMP_COMMA_BITS)) * NRF_MAG_APP_SCALE_FACTOR;
+}

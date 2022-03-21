@@ -10,6 +10,8 @@
 extern char string[];
 extern QueueHandle_t pPrintQueue;
 
+extern uint8_t ringbufferFull;
+
 /**
  * @file
  * Implementation of ring buffer functions.
@@ -25,6 +27,11 @@ void ring_buffer_queue(ring_buffer_t *buffer, char data) {
   if(ring_buffer_is_full(buffer)) {
     /* Is going to overwrite the oldest byte */
     /* Increase tail index */
+//	if (!ringbufferFull)
+//	{
+//		ringbufferFull = 1;
+//	}
+
     buffer->tail_index = ((buffer->tail_index + 1) & RING_BUFFER_MASK);
   }
 

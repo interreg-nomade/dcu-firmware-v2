@@ -40,6 +40,8 @@ typedef uint32_t ring_buffer_size_t;
  * Simplifies the use of <tt>struct ring_buffer_t</tt>.
  */
 typedef struct ring_buffer_t ring_buffer_t;
+typedef struct ring_8xbuffer_t ring_8xbuffer_t;
+typedef struct ring_16xbuffer_t ring_16xbuffer_t;
 
 /**
  * Structure which holds a ring buffer.
@@ -49,6 +51,34 @@ typedef struct ring_buffer_t ring_buffer_t;
 struct ring_buffer_t {
   /** Buffer memory. */
   char buffer[RING_BUFFER_SIZE];
+  /** Index of tail. */
+  ring_buffer_size_t tail_index;
+  /** Index of head. */
+  ring_buffer_size_t head_index;
+};
+
+/**
+ * Structure which holds a ring buffer.
+ * The buffer contains a buffer array
+ * as well as metadata for the ring buffer.
+ */
+struct ring_8xbuffer_t {
+  /** Buffer memory. */
+  char buffer[RING_BUFFER_SIZE*8];
+  /** Index of tail. */
+  ring_buffer_size_t tail_index;
+  /** Index of head. */
+  ring_buffer_size_t head_index;
+};
+
+/**
+ * Structure which holds a ring buffer.
+ * The buffer contains a buffer array
+ * as well as metadata for the ring buffer.
+ */
+struct ring_16xbuffer_t {
+  /** Buffer memory. */
+  char buffer[RING_BUFFER_SIZE*16];
   /** Index of tail. */
   ring_buffer_size_t tail_index;
   /** Index of head. */

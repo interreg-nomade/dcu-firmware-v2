@@ -32,7 +32,7 @@ extern QueueHandle_t pPrintQueue;
 
 void BLEmodule1_task_init()
 {
-  osThreadDef(BLEmodule1Task, BLE1Task, osPriorityAboveNormal, 0, 1024);	/* Declaration of BLEmodule1 task */
+  osThreadDef(BLEmodule1Task, BLE1Task, osPriorityNormal, 0, 1024);	/* Declaration of BLEmodule1 task */
   BLEmodule1TaskHandle = osThreadCreate(osThread(BLEmodule1Task), NULL);			/* Start BLEmodule task */
 }
 
@@ -77,10 +77,6 @@ static void BLEmodule1_init(void)
     {
 	  xQueueSend(pPrintQueue, "[APP_BLEmodule1] [BLEmodule1_init] Error creating BLE module 1 event queue.\n", 0);
     }
-    else
-    {
-      xQueueSend(pPrintQueue, "[APP_BLEmodule1] [BLEmodule1_init] BLE module 1 event queue created.\n", 0);
-    }
 #endif
   }
   else
@@ -101,10 +97,10 @@ int BLEmodule1_Config_Init()
   int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_BT); // Get number of BLE modules from config
   if (n >= 1)
   { // BLE modules are available, link the BLE module pointer handler to instrument_config_t struct from decodedConfig struct
-#if PRINTF_APP_BLEMODULE1_DBG
-    sprintf(string, "[APP_BLEmodule1] [BLEmodule1_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
-    xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if PRINTF_APP_BLEMODULE1_DBG
+//    sprintf(string, "[APP_BLEmodule1] [BLEmodule1_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
+//    xQueueSend(pPrintQueue, string, 0);
+//#endif
 	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule1Instrument, SETUP_PRM_COMM_METHOD_BT);
   }
   else

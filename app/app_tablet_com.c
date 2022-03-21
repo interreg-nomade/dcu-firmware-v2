@@ -60,6 +60,8 @@
 #include "common.h"
 #include "imu_com.h"
 
+bool tablet_time_received = 0;
+
 #define PRINT_APP_TABLET_COM_DBG_MSG 1
 #if PRINT_APP_TABLET_COM_DBG_MSG
 #define PRINT_APP_TABLET_RECEIVE_WD				0
@@ -77,6 +79,8 @@
 #define USB_TABLET_COM_FLOW_CONTROL_TIMEOUT 100
 #define USB_TABLET_COM_WATCHDOG_TIMEOUT     500
 #define USB_AUTOMATIC_COMMUNICATION 		  1
+
+
 
 /* ***** Watchdog ***** */
 static TimerHandle_t xWatchdogTimerHandle;
@@ -164,7 +168,7 @@ void cpl_init_rx_task(void)
   memset(&flowControlRx, 0, sizeof(fc_rx_handler_t));
   sprintf(string, "cpl_init_rx_task done. \n");
   HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
-  osThreadDef(upLinksManager, upLinksManagerThread, osPriorityRealtime, 0, 4096);   /* Create upLinksManagerThread, was priority normal, but then issue with stopping a measurement */
+  osThreadDef(upLinksManager, upLinksManagerThread, osPriorityHigh, 0, 4096);   /* Create upLinksManagerThread, was priority normal, but then issue with stopping a measurement */
   cplRxTaskHandle = osThreadCreate(osThread(upLinksManager), NULL);				/* Start upLinksManagerThread */
   watchdog_timer_init(); 														/* Init watchdog timer and start it */
 }
@@ -502,6 +506,9 @@ void cpl_ServiceHandler(cpl_msg_t * pMsg, fc_tx_handler_t * pfcTxHandler, fc_rx_
 
   	      app_rtc_print_RTCdateTime();
   	      compare_RTCunixtime_Epoch();
+
+		  // Notify to app_init that UTC time has been received
+  	      tablet_time_received = 1;
 
 //  	      ds3231_time_t getds3231time;
 //  	      struct tm RTCdateTime;
@@ -1761,3 +1768,13 @@ void tablet_com_send_watchdog_msg(char ad)
 }
 
 //watchdogTimerCallback
+
+bool tablet_get_time_received(void)
+{
+	return tablet_time_received;
+}
+
+void tablet_set_time_received(bool state)
+{
+	tablet_time_received = state;
+}

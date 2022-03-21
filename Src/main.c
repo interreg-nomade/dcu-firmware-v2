@@ -118,7 +118,7 @@ imu_module imu_8 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Mo
 
 imu_module *imu_array [] = {&imu_1, &imu_2, &imu_3, &imu_4, &imu_5, &imu_6, &imu_7, &imu_8};
 
-
+uint8_t ringbufferFull;
 
 //uint16_t file_nummer = 0;
 
@@ -236,12 +236,11 @@ int main(void)
   MX_FREERTOS_Init();
 
   uint16_t software_version = DCU_SW_VERSION;
-  sprintf(string, "************************************\n   NOMADe Mainboard V2.002\n************************************\n");
+  sprintf(string, "************************************\n   NOMADe Mainboard V2.001\n************************************\n");
   HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
 
-
 //  pPrintQueue = xQueueCreate(10, sizeof(char *)); // protected print queue can contain max 10 character pointers
-  pPrintQueue = xQueueCreate(70, sizeof(string)); // protected print queue can contain max 30 strings of 150 characters each
+  pPrintQueue = xQueueCreate(40, sizeof(string)); // protected print queue can contain max 30 strings of 150 characters each
   osThreadDef(pPrintGatekeeper, pPrintGatekeeperThread, osPriorityNormal, 0, 1000);
   pPrintTaskHandle = osThreadCreate(osThread(pPrintGatekeeper), NULL);
 
@@ -404,7 +403,6 @@ static void MPU_Config(void)
 
 }
 
-
 static void pPrintGatekeeperThread(void)
 {
 //	char *pMessageToPrint; // for Queue of pointers
@@ -414,6 +412,7 @@ static void pPrintGatekeeperThread(void)
 //		xQueueReceive(pPrintQueue, &pMessageToPrint, portMAX_DELAY); // for Queue of pointers
 		xQueueReceive(pPrintQueue, MessageToPrint, portMAX_DELAY); // for Queue of strings
 		HAL_UART_Transmit(&huart7, (uint8_t *)MessageToPrint, strlen(MessageToPrint), 25);
+		//HAL_Delay(1);
 	}
 }
 /* USER CODE END 4 */
