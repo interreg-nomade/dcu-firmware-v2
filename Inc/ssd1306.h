@@ -188,6 +188,7 @@ void dcu_set_text_cal_mag();
 
 /** Battery **/
 void ssd1306_battery();
+void dcu_set_text_battery_sensors(float *sensor1, float *sensor2, float *sensor3, float *sensor4, float *sensor5, float *sensor6);
 
 
 _END_STD_C

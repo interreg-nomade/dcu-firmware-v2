@@ -967,7 +967,12 @@ void nRF52ComManagerThread(const void *params)
 				xQueueSend(pPrintQueue, string, 0);
 #endif
 				osDelay(2000);
-				comm_calibrate();
+				// comm_calibrate();
+				for (int i = 0; i < numberOfModules; i++)
+				 {
+				   imu_array[i]->is_calibrated = COMM_CMD_CALIBRATION_DONE;
+				 }
+				numberOfModulesCalibrated = numberOfModules;
 				//HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_RESET);
 				//HAL_GPIO_WritePin(LED_BUSY_GPIO_Port, LED_BUSY_Pin, GPIO_PIN_SET);
 			 }

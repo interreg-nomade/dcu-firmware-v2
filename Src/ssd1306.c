@@ -722,6 +722,49 @@ void dcu_set_text(char* text)
 
 }
 
+void dcu_set_text_battery_sensors(float *sensor1, float *sensor2, float *sensor3, float *sensor4, float *sensor5, float *sensor6)
+{
+    uint8_t y = 10;
+    uint8_t spacing = 10;
+
+    char string[20];
+
+    #ifdef SSD1306_INCLUDE_FONT_6x8
+
+    sprintf(string, "IMU 1: %.2f V", *sensor1);
+    ssd1306_SetCursor(40, y);
+    ssd1306_WriteString(string, Font_6x8, White);
+
+    y += spacing;
+    sprintf(string, "IMU 2: %.2f V", *sensor2);
+    ssd1306_SetCursor(40, y);
+    ssd1306_WriteString(string, Font_6x8, White);
+
+    y += spacing;
+    sprintf(string, "IMU 3: %.2f V", *sensor3);
+    ssd1306_SetCursor(40, y);
+    ssd1306_WriteString(string, Font_6x8, White);
+
+    y += spacing;
+    sprintf(string, "IMU 4: %.2f V", *sensor4);
+    ssd1306_SetCursor(40, y);
+    ssd1306_WriteString(string, Font_6x8, White);
+
+    y += spacing;
+    sprintf(string, "IMU 5: %.2f V", *sensor5);
+    ssd1306_SetCursor(40, y);
+    ssd1306_WriteString(string, Font_6x8, White);
+
+    y += spacing;
+    sprintf(string, "IMU 6: %.2f V", *sensor6);
+    ssd1306_SetCursor(40, y);
+    ssd1306_WriteString(string, Font_6x8, White);
+
+    #endif
+
+	ssd1306_UpdateScreen();
+}
+
 void dcu_set_text_battery2(float *voltage)
 {
     uint8_t y = SSD1306_HEIGHT / 2;

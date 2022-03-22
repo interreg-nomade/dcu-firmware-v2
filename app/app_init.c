@@ -174,10 +174,9 @@ void project_init(void)
 	float battVoltage;
 	measBatt(&battVoltage);
 
-	osDelay(2000);
-
 	ssd1306_battery();
 	dcu_set_text_battery2(&battVoltage);
+
 	osDelay(2000);
 }
 
@@ -188,6 +187,13 @@ void project_init(void)
 */
 void initThread(const void * params)
 {
+
+  osDelay(4000);
+  comm_set_sync(COMM_CMD_START_SYNC);
+  dcu_set_text_2_lines("Sync", "started");
+  osDelay(1000);
+
+
   int rawFileRetrieved = 0;
   int onlyonce = 0;
   FATFS_Init(); /* Initialize file system and mount SD Card */
@@ -269,6 +275,7 @@ void initThread(const void * params)
 
 
                   dcu_set_text_2_lines("Move","Modules");
+
 #endif
           	    }
       	      }
@@ -441,9 +448,8 @@ void initThread(const void * params)
 #if PRINTF_APP_INIT
                            xQueueSend(pPrintQueue, "[app_init] [initThread] Start module synchronization.\n", 0);
 #endif
-             	           comm_set_sync(COMM_CMD_START_SYNC);
-
-             	          dcu_set_text_2_lines("Sync", "started");
+             	           // comm_set_sync(COMM_CMD_START_SYNC);
+             	           // dcu_set_text_2_lines("Sync", "started");
 
 //             	           osDelay(8000);
 
@@ -505,7 +511,21 @@ void initThread(const void * params)
 void oledThread(const void * params)
 {
 	dcu_set_text_2_lines("Measurement", "Started");
-	osDelay(1000);
+	osDelay(2000);
+
+	// Request battery level
+	// comm_req_batt_lvl();
+	// @Sarah I don't know how to handle the received data
+
+
+	ssd1306_battery();
+	float voltages[6];
+	for(uint8_t i = 0; i<6; i++)
+	{
+		voltages[i] = 3.75f;
+	}
+	dcu_set_text_battery_sensors(&voltages[0], &voltages[1], &voltages[2], &voltages[3], &voltages[4], &voltages[5]);
+	osDelay(10000);
 
 	uint8_t x_start = 0;
 	uint8_t x_len = 50;
