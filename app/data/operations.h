@@ -28,6 +28,25 @@ static void decode_raw_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out);
 //
 
 
+/** nRF52 defines **/
+
+#define NRF_QUAT_APP_SCALE_FACTOR	10000
+#define NRF_GYRO_APP_SCALE_FACTOR	10
+#define NRF_ACCEL_APP_SCALE_FACTOR	1000
+#define NRF_MAG_APP_SCALE_FACTOR	1
+
+#define FIXED_POINT_FRACTIONAL_BITS_QUAT    30          // Number of bits used for comma part of quaternion data
+#define RAW_Q_FORMAT_GYR_COMMA_BITS         5           // Number of bits used for comma part of raw data.
+#define RAW_Q_FORMAT_ACC_COMMA_BITS         10          // Number of bits used for comma part of raw data.
+#define RAW_Q_FORMAT_CMP_COMMA_BITS         4			// Number of bits used for comma part of raw data.
+
+// Decoding functions
+static void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out);
+static void decode_quat_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out);
+static void decode_raw_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out);
+static void decode_raw_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out);
+//
+
 int imu_data_to_ascii(imu_data_t * imu, char * dest, size_t * size);
 
 int imu_data_to_bin(imu_data_t * imu, char * dest, size_t * size);

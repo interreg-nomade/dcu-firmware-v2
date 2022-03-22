@@ -56,12 +56,18 @@
 #include "nRF52_driver.h"
 #include "app_nRF52_com.h"
 
-#include "../lib/ssd1306_oled/ssd1306.h" /** OLED **/
+/** OLED **/
+#include "ssd1306.h"
 
 #define PRINTF_APP_INIT 1
 
 static void initThread_init(void);
 void initThread(const void * params);
+
+/** OLED Thread **/
+static osThreadId oledThreadHanlder;
+static void initThread_init(void);
+void oledThread(const void * params);
 
 static osThreadId initThreadHanlder;
 
@@ -88,6 +94,12 @@ int numberOfModulesCalibrated = 0;
 int numberOfModulesSampleRateGiven = 0;
 int numberOfModulesOutputDataTypeGiven = 0;
 int numberOfModulesSynchronized = 0;
+
+static void oledThread_init(void)
+{
+	osThreadDef(oledManager, oledThread, osPriorityLow, 0, 256);
+	oledThreadHanlder = osThreadCreate (osThread(oledManager), NULL);
+}
 
 static void initThread_init(void)
 {
@@ -158,23 +170,14 @@ void project_init(void)
 	ssd1306_nomade();
 
 	/** Battery voltage measurements **/
-	// measBatt_Init();
+	measBatt_Init();
 	float battVoltage;
-	// battVoltage = measBatt();
-	battVoltage = 3.99f;
-
-	/*
-#if PRINTF_APP_INIT
-      sprintf(string, "%u [app_init] [initThread] Battery: %f", battVoltage);
-      xQueueSend(pPrintQueue, string, 0);
-#endif*/
-
-	osDelay(2000);
+	measBatt(&battVoltage);
 
 	ssd1306_battery();
-	dcu_set_text_battery2("x.xx V");
-	osDelay(2000);
+	dcu_set_text_battery2(&battVoltage);
 
+	osDelay(2000);
 }
 
 /* initThread
@@ -184,6 +187,13 @@ void project_init(void)
 */
 void initThread(const void * params)
 {
+
+  osDelay(4000);
+  comm_set_sync(COMM_CMD_START_SYNC);
+  dcu_set_text_2_lines("Sync", "started");
+  osDelay(1000);
+
+
   int rawFileRetrieved = 0;
   int onlyonce = 0;
   FATFS_Init(); /* Initialize file system and mount SD Card */
@@ -247,10 +257,12 @@ void initThread(const void * params)
       {
         if (numberOfModulesMACAddressAvailable != numberOfModules)
         {
+
 #if PRINTF_APP_INIT
       sprintf(string, "%u [app_init] [initThread] Send mac addresses.\n",(unsigned int) HAL_GetTick());
       xQueueSend(pPrintQueue, string, 0);
 #endif
+
           comm_set_mac_addr(mac_addr,sizeof(mac_addr));
         }
         else
@@ -263,10 +275,13 @@ void initThread(const void * params)
       	      {
           	    if (!imu_array[i]->connected)
            	    {
-          	      dcu_set_text_2_lines("Move","Modules");
 #if PRINTF_APP_INIT
                   sprintf(string, "[app_init] [initThread] BLE nodes defined, try to connect %s. Move module.\n",imu_array[i]->name);
                   xQueueSend(pPrintQueue, string, 0);
+
+
+                  dcu_set_text_2_lines("Move","Modules");
+
 #endif
           	    }
       	      }
@@ -287,35 +302,38 @@ void initThread(const void * params)
                      {
             	       case COMM_CMD_CALIBRATION_START:
             	       {
-            	    	 dcu_set_text_cal_gyro();
 #if PRINTF_APP_INIT
                          sprintf(string, "[app_init] [initThread] Try to calibrate gyroscope of connected %s. Do not move module.\n",imu_array[i]->name);
                          xQueueSend(pPrintQueue, string, 0);
+
+                         dcu_set_text_cal_gyro();
 #endif
             		     break;
             	       }
             	       case COMM_CMD_CALIBRATION_GYRO_DONE:
             	       {
-            	    	 dcu_set_text_cal_accel();
 #if PRINTF_APP_INIT
                          sprintf(string, "[app_init] [initThread] Try to calibrate accelerometer of connected %s. Place module in 3-axes, one by one.\n",imu_array[i]->name);
                          xQueueSend(pPrintQueue, string, 0);
+
+                         dcu_set_text_cal_accel();
 #endif
             		     break;
             	       }
             	       case COMM_CMD_CALIBRATION_ACCEL_DONE:
             	       {
-            	    	 dcu_set_text_cal_mag();
 #if PRINTF_APP_INIT
                          sprintf(string, "[app_init] [initThread] Try to calibrate magnetometer of connected %s. Move module in an 8 shape.\n",imu_array[i]->name);
                          xQueueSend(pPrintQueue, string, 0);
+
+                         dcu_set_text_cal_mag();
 #endif
             	         break;
             	       }
             	       case COMM_CMD_CALIBRATION_DONE:
             	       {
-            	    	 dcu_set_text_2_lines("IMU","Calibrated");
-            	    	 osDelay(2000);
+            	    	   dcu_set_text_2_lines("IMU","Calibrated");
+            	    	   osDelay(2000);
             	       }
             		   default:
             		   {
@@ -334,10 +352,11 @@ void initThread(const void * params)
              {
                 if (numberOfModulesSampleRateGiven != numberOfModules)
                 {
-                   dcu_set_text_2_lines("Set sample", "frequency");
 #if PRINTF_APP_INIT
                    sprintf(string, "%u [app_init] [initThread] Set sample frequency to %dHz of all modules.\n",(unsigned int) HAL_GetTick(),imu_array[0]->sampleFrequency);
                    xQueueSend(pPrintQueue, string, 0);
+
+                   dcu_set_text_2_lines("Set sample", "frequency");
 #endif
                    comm_set_frequency(imu_array[0]->sampleFrequency);
                  }
@@ -356,63 +375,70 @@ void initThread(const void * params)
             	              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
             	              {
             	                 outputDataTypeValue = COMM_CMD_MEAS_QUAT6;
-            	                 dcu_set_text_2_lines("Quat 6 DoF", "50 Hz");
 #if PRINTF_APP_INIT
             	                 xQueueSend(pPrintQueue, "to quaternions, 6DOF.\n", 0);
+
+            	                 dcu_set_text_2_lines("Quat 6 DoF", "50 Hz");
 #endif
             	                 break;
             	              }
             	              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
             	              {
             	                 outputDataTypeValue = COMM_CMD_MEAS_QUAT6;
-            	                 dcu_set_text_2_lines("Quat 6 DoF", "100 Hz");
 #if PRINTF_APP_INIT
             	                 xQueueSend(pPrintQueue, "to quaternions, 6DOF.\n", 0);
+
+            	                 dcu_set_text_2_lines("Quat 6 DoF", "100 Hz");
 #endif
             	                 break;
             	              }
             	              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
             	              {
             	    	         outputDataTypeValue = COMM_CMD_MEAS_RAW;
-            	    	         dcu_set_text_2_lines("RAW Data", "50 Hz");
 #if PRINTF_APP_INIT
             	                 xQueueSend(pPrintQueue, "to RAW: gyroscope, accelerometer, magnetometer.\n", 0);
+
+            	                 dcu_set_text_2_lines("RAW Data", "50 Hz");
 #endif
             	    	         break;
             	              }
             	              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
             	              {
             	    	         outputDataTypeValue = COMM_CMD_MEAS_RAW;
-            	    	         dcu_set_text_2_lines("RAW Data", "100 Hz");
 #if PRINTF_APP_INIT
             	                 xQueueSend(pPrintQueue, "to RAW: gyroscope, accelerometer, magnetometer.\n", 0);
+
+            	                 dcu_set_text_2_lines("RAW Data", "100 Hz");
 #endif
             	    	         break;
             	              }
             	              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
             	              {
             	    	         outputDataTypeValue = COMM_CMD_MEAS_QUAT9;
-            	    	         dcu_set_text_2_lines("Quat 9 DoF", "50 Hz");
 #if PRINTF_APP_INIT
             	                 xQueueSend(pPrintQueue, "to quaternions, 9DOF.\n", 0);
+
+            	                 dcu_set_text_2_lines("Quat 9 DoF", "50 Hz");
 #endif
             	    	         break;
             	              }
             	              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
             	              {
             	    	         outputDataTypeValue = COMM_CMD_MEAS_QUAT9;
-            	    	         dcu_set_text_2_lines("Quat 9 DoF", "100 Hz");
 #if PRINTF_APP_INIT
             	                 xQueueSend(pPrintQueue, "to quaternions, 9DOF.\n", 0);
+
+            	                 dcu_set_text_2_lines("Quat 9 DoF", "100 Hz");
 #endif
             	    	         break;
             	              }
             	              default:
             	              {
              	    	         outputDataTypeValue = COMM_CMD_MEAS_RAW;
-             	    	         dcu_set_text_2_lines("Default setting", "(RAW)");
 #if PRINTF_APP_INIT
                                  xQueueSend(pPrintQueue, "to RAW: gyroscope, accelerometer, magnetometer. But undefined value in RAW file.\n", 0);
+
+                                 dcu_set_text_2_lines("Default setting", "(RAW)");
 #endif
               	                 break;
             	              }
@@ -426,27 +452,32 @@ void initThread(const void * params)
 //                    	if (numberOfModulesSynchronized != numberOfModules)
 //                    	{ // synchronize connected modules:
 #if PRINTF_APP_INIT
-                           xQueueSend(pPrintQueue, "[app_init] [initThread] Start module synchronization.\n", 0);
+                           //xQueueSend(pPrintQueue, "[app_init] [initThread] Start module synchronization.\n", 0);
 #endif
-                           dcu_set_text_2_lines("Sync", "started");
-                           comm_set_sync(COMM_CMD_START_SYNC);
+             	           // comm_set_sync(COMM_CMD_START_SYNC);
+             	           // dcu_set_text_2_lines("Sync", "started");
+
 //             	           osDelay(8000);
 
 //                    	}
 //                    	else
 //                    	{ // now module measurements can start:
 #if PRINTF_APP_INIT
-                           xQueueSend(pPrintQueue, "[app_init] [initThread] Start module measurement.\n", 0);
+                           //xQueueSend(pPrintQueue, "[app_init] [initThread] Start module measurement.\n", 0);
 #endif
-             	           osDelay(8000);
-             	           //comm_start_meas();
 
-              	          // Wait until tablet connection
-              	          while(tablet_get_time_received() == 0);
-              	          tablet_set_time_received(0);
 
-             	          stm32_datetime_t datetime;
- 						  memset(&datetime, 0, sizeof(stm32_datetime_t));
+             	          osDelay(4000);
+
+
+             	          dcu_set_text_2_lines("Connect", "Tablet");
+
+             	          // Wait until tablet connection
+             	          while(tablet_get_time_received() == 0);
+             	          tablet_set_time_received(0);
+
+						  stm32_datetime_t datetime;
+						  memset(&datetime, 0, sizeof(stm32_datetime_t));
 
 						  // Get time from RTC in milliseconds
 						  stm32_time_t epochNow_Ms;
@@ -457,7 +488,7 @@ void initThread(const void * params)
 						  datetime = *localtime(&epoch_AD_s);
 
 #if PRINTF_APP_INIT
-						  strftime(string, 150, "[APP_INIT] %A %c \n", &datetime);
+						  strftime(string, 150, "[APP_INIT] %A %c", &datetime);
 						  //sprintf(string, "[APP_INIT] h %d m %d s %d - day %d month %d year %d\n",
 							//	  datetime.tm_hour, datetime.tm_min, datetime.tm_sec, datetime.tm_mday, datetime.tm_mday, datetime.tm_year);
 						  xQueueSend(pPrintQueue, string, 0);
@@ -465,11 +496,13 @@ void initThread(const void * params)
 
 
 						  // Start measurement
-						  dcu_set_text_2_lines("Measurement", "Running");
 						  comm_start_meas_w_time(&datetime);
 
-             	          osDelay(1000);
-              	          osThreadTerminate(initThreadHanlder);
+						   /** From now on, start displaying that measurement is going on **/
+             	           oledThread_init();
+
+             	           osDelay(1000);
+              	           osThreadTerminate(initThreadHanlder);
 //                    	}
                 	}
                 }
@@ -479,4 +512,64 @@ void initThread(const void * params)
       }
 	}
   }
+}
+
+void oledThread(const void * params)
+{
+	dcu_set_text_2_lines("Measurement", "Started");
+	osDelay(2000);
+
+	// Request battery level
+	// comm_req_batt_lvl();
+	// @Sarah I don't know how to handle the received data
+
+
+	ssd1306_battery();
+	float voltages[6];
+	for(uint8_t i = 0; i<6; i++)
+	{
+		voltages[i] = 3.75f;
+	}
+	dcu_set_text_battery_sensors(&voltages[0], &voltages[1], &voltages[2], &voltages[3], &voltages[4], &voltages[5]);
+	osDelay(10000);
+
+	uint8_t x_start = 0;
+	uint8_t x_len = 50;
+	uint8_t x_end = x_start + x_len;
+
+	uint8_t y_start = SSD1306_HEIGHT-10;
+	uint8_t y_end = SSD1306_HEIGHT-1;
+
+	bool forward_backward = 0;
+
+	uint8_t step = 10;
+
+	/** TODO: this while loop must be interrupted when measurements stopped **/
+	while(1)
+	{
+		osDelay(500);
+
+		ssd1306_Fill(Black);
+		dcu_set_text_2_lines("Measurement", "Running");
+		ssd1306_DrawRectangle(x_start, y_start, x_end, y_end, White);
+		ssd1306_UpdateScreen();
+
+		// Edge conditions
+		if(x_end >= SSD1306_WIDTH-8)
+		{
+			forward_backward = 1;
+		}else if(x_start <= 0)
+		{
+			forward_backward = 0;
+		}
+
+		if(forward_backward)
+		{
+			x_start-=step;
+			x_end-=step;
+		}else{
+			x_start+=step;
+			x_end+=step;
+		}
+	}
 }
