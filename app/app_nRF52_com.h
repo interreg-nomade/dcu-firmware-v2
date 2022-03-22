@@ -11,6 +11,8 @@
 #define MAX_nRF52_PAYLOAD_LENGTH 86 //128
 #define NRF52_START_DELIMITER   0x73
 
+#include "nRF52_driver.h"
+
 typedef struct {
     unsigned char commandType;
 	unsigned char command;
@@ -43,5 +45,7 @@ int nRF52_buildFrame(nRF52_msg_t * nRF52Msg, unsigned int * cx, char * buffer);
 void nRF52_init_rx_task(void);
 void nRF52_RxHandler(char c);
 void nRF52_rst_msg(nRF52_msg_t * BTMsg);
+
+void get_battery_levels(BATTERY_ARRAY *batt);
 
 #endif /* APP_NRF52_COM_H_ */

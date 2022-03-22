@@ -520,17 +520,15 @@ void oledThread(const void * params)
 	osDelay(2000);
 
 	// Request battery level
-	// comm_req_batt_lvl();
+	comm_req_batt_lvl();
 	// @Sarah I don't know how to handle the received data
 
+	osDelay(100);
+	BATTERY_ARRAY batt;
+	get_battery_levels(&batt);
 
 	ssd1306_battery();
-	float voltages[6];
-	for(uint8_t i = 0; i<6; i++)
-	{
-		voltages[i] = 3.75f;
-	}
-	dcu_set_text_battery_sensors(&voltages[0], &voltages[1], &voltages[2], &voltages[3], &voltages[4], &voltages[5]);
+	dcu_set_text_battery_sensors(&batt.batt[0].voltage, &batt.batt[1].voltage, &batt.batt[2].voltage, &batt.batt[3].voltage, &batt.batt[4].voltage, &batt.batt[5].voltage);
 	osDelay(10000);
 
 	uint8_t x_start = 0;

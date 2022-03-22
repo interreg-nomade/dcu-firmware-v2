@@ -8,6 +8,9 @@
 #ifndef NRF52_DRIVER_H_
 #define NRF52_DRIVER_H_
 
+
+#include "stdint.h"
+
 //  _______________________________________________________________________________
 // +------------+------------+---------------------+-----------+-----------+---------+--------+
 // | START_BYTE | packet_len | command (DATA_BYTE) | sensor_nr | data_type | data    | CS     |

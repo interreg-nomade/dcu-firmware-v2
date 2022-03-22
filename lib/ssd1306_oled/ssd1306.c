@@ -724,7 +724,7 @@ void dcu_set_text(char* text)
 
 void dcu_set_text_battery_sensors(float *sensor1, float *sensor2, float *sensor3, float *sensor4, float *sensor5, float *sensor6)
 {
-    uint8_t y = 10;
+    uint8_t y = 0;
     uint8_t spacing = 10;
 
     char string[20];

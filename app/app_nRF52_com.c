@@ -86,6 +86,9 @@ imu_100Hz_data_t sensorModule4Event;
 imu_100Hz_data_t sensorModule5Event;
 imu_100Hz_data_t sensorModule6Event;
 
+BATTERY_ARRAY battery;
+
+
 void nRF52_init_rx_task(void)
 {
   osDelay(100);
@@ -726,6 +729,21 @@ void nRF52ComManagerThread(const void *params)
 			sprintf(string, "%u [app_nRF52_com] [nRF52ComManagerThread] nRF52 module REQ_BATTERY_LEVEL command received.\n",(unsigned int) HAL_GetTick());
 			xQueueSend(pPrintQueue, string, 0);
 #endif
+
+			memcpy(&battery, &nRF52RxMsg.DU[4], sizeof(battery));
+
+#if PRINTF_nRF52_COMMANAGER
+			sprintf(string, "%u [app_nRF52_com] [nRF52ComManagerThread] battery: %.2f - %.2f - %.2f - %.2f - %.2f - %.2f",
+					(unsigned int) HAL_GetTick(),
+					battery.batt[0].voltage,
+					battery.batt[1].voltage,
+					battery.batt[2].voltage,
+					battery.batt[3].voltage,
+					battery.batt[4].voltage,
+					battery.batt[5].voltage);
+			xQueueSend(pPrintQueue, string, 0);
+#endif
+
 		  }
 		  break;
 		  case COMM_CMD_OK:
@@ -1502,4 +1520,9 @@ static void BLEmoduleDataToSensorEvent2(int32_t data[20], imu_100Hz_data_t *sens
    sensorEvent->magnetometer2.x  = data[10];
    sensorEvent->magnetometer2.y  = data[11];
    sensorEvent->magnetometer2.z  = data[12];
+}
+
+void get_battery_levels(BATTERY_ARRAY *batt)
+{
+	memcpy(batt, &battery, sizeof(*batt));
 }
