@@ -118,7 +118,7 @@ imu_module imu_8 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Mo
 
 imu_module *imu_array [] = {&imu_1, &imu_2, &imu_3, &imu_4, &imu_5, &imu_6, &imu_7, &imu_8};
 
-
+uint8_t ringbufferFull;
 
 //uint16_t file_nummer = 0;
 
@@ -241,7 +241,7 @@ int main(void)
 
 
 //  pPrintQueue = xQueueCreate(10, sizeof(char *)); // protected print queue can contain max 10 character pointers
-  pPrintQueue = xQueueCreate(70, sizeof(string)); // protected print queue can contain max 30 strings of 150 characters each
+  pPrintQueue = xQueueCreate(40, sizeof(string)); // protected print queue can contain max 30 strings of 150 characters each
   osThreadDef(pPrintGatekeeper, pPrintGatekeeperThread, osPriorityNormal, 0, 1000);
   pPrintTaskHandle = osThreadCreate(osThread(pPrintGatekeeper), NULL);
 

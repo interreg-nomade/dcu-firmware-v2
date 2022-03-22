@@ -61,16 +61,8 @@ void terminalComManagerThread(const void *params);
 // ===                    Static functions                      ===
 // ================================================================
 
-static uint8_t is_measuring(void);
-static void send_to_all_sensors(void (*function)(imu_module*), imu_module *imu_array);
-static void send_to_all_sensors_with_param(void (*function)(imu_module*, uint8_t), imu_module *imu_array, uint8_t df);
 static uint8_t convert_ASCII_to_HEX(uint8_t msn, uint8_t lsn);
-static void read_mac_address(imu_module *imu);
-
-
 static int com_Build(void);
-
-
 void com_init_rx_task(void)
 {
     osDelay(100);
@@ -84,7 +76,7 @@ void com_init_rx_task(void)
 
     memset(&ComRxMsg, 0, sizeof(com_msg_t));
 
-    osThreadDef(terminalComManager, terminalComManagerThread, osPriorityNormal, 0, 1024);
+    osThreadDef(terminalComManager, terminalComManagerThread, osPriorityRealtime, 0, 1024);
     comRxTaskHandle = osThreadCreate(osThread(terminalComManager), NULL);
 }
 
@@ -363,105 +355,6 @@ void terminalComManagerThread(const void *params)
 				{
 					comm_set_frequency(50);
 				}
-
-
-
-//				case 0x66: // "f": Change sampling frequency
-//				{
-//					if(imu != NULL)
-//					{
-//						imu = NULL;
-//					}
-//					else
-//					{
-//						previous_command = 0x66;
-//						USB_COM_change_frequency_menu();
-//						sprintf(string, "Give number: ");
-//			      	    xQueueSend(pPrintQueue, string, 0);
-//					}
-//				}
-//				break;
-//				case 0x72: // "r": Start the measurement with synchronization
-//				{
-//					if(SD_Status.status == SD_MOUNTED)
-//					{
-//						sprintf(string, "Start measurement.\n");
-//			      	    xQueueSend(pPrintQueue, string, 0);
-//						SD_CARD_COM_open_file();
-//						IMU_start_measurements(&imu_1);
-//					}
-//					else
-//					{
-//						sprintf(string, "Measurements not started, SD card not available.\n");
-//			      	    xQueueSend(pPrintQueue, string, 0);
-//					}
-//				}
-//				break;
-//				case 0x74: // "t": Start the measurement without synchronization
-//				{
-//					if(SD_Status.status == SD_MOUNTED)
-//					{
-//						sprintf(string, "Start measurement.\n");
-//			      	    xQueueSend(pPrintQueue, string, 0);
-//						SD_CARD_COM_open_file();
-//						IMU_start_measurements_without_sync(&imu_1);
-//					}
-//					else
-//					{
-//						sprintf(string, "No available SD card found.\n");
-//			      	    xQueueSend(pPrintQueue, string, 0);
-//					}
-//				}
-//				break;
-//				case 0x65:  // "e": End the measurement
-//				{
-//					if(is_measuring())
-//					{
-////						sprintf(string, "End the measurement.");
-////						HAL_UART_Transmit(&huart5, (uint8_t *)string, strlen(string), 25);
-////						SD_CARD_COM_close_file();
-//						IMU_stop_measurements(&imu_1);
-//					}
-//					else
-//					{
-//						sprintf(string, "Start a measurement first.\n");
-//			      	    xQueueSend(pPrintQueue, string, 0);
-//						IMU_stop_measurements(&imu_1);
-//
-//					}
-//
-//				}
-//				break;
-//				case 0x67: // "g": Change data format - Only Quaternion data
-//				{
-//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_1);
-//				}
-//				break;
-//				case 0x68: // "h": Change data format - Only Gyroscope data
-//				{
-//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_2);
-//				}
-//				break;
-//				case 0x6A: // "j": Change data format - Only Accelerometer data
-//				{
-//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_3);
-//				}
-//				break;
-//				case 0x6B: // "k": Change data format - Gyroscope + Accelerometer data
-//				{
-//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_4);
-//				}
-//				break;
-//				case 0x6C: // "l": Change data format - Quaternion + Gyroscope + Accelerometer data
-//				{
-//					send_to_all_sensors_with_param(IMU_change_dataformat, *imu_array, DATA_FORMAT_5);
-//				}
-//				break;
-//				case 0x7A: // "z": Get the IMU module software version
-//				{
-//					send_to_all_sensors(IMU_get_software_version, *imu_array);
-//				}
-//				break;
 				case 0x0A: //"<ENTER>"
 				{
 					// It's just an enter (captured)
@@ -472,7 +365,7 @@ void terminalComManagerThread(const void *params)
 		      	    xQueueSend(pPrintQueue, string, 0);
 			}
 		}
-		osDelay(100); // every 100 HAL Ticks
+		osDelay(4); // every 100 HAL Ticks
 	}
 }
 
@@ -525,58 +418,6 @@ void com_rst_msg(com_msg_t * pComMsg)
 // ===                    Static functions                      ===
 // ================================================================
 
-uint8_t is_measuring(void){
-	uint8_t rt_val = 0;
-	for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++){
-		if(imu_array[i]->measuring) rt_val = 1;
-	}
-	return rt_val;
-}
-
-void send_to_all_sensors(void (*function)(imu_module*), imu_module *imu_array){
-	for(uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++){
-		if(imu_array[i].connected) function(&imu_array[i]);
-	}
-}
-
-void send_to_all_sensors_with_param(void (*function)(imu_module*, uint8_t), imu_module *imu_array, uint8_t df)
-{
-  for (uint8_t i = 0; i < NUMBER_OF_SENSOR_SLOTS; i++)
-  {
-    if (imu_array[i].connected)
-    {
-      function(&imu_array[i], df);
-#if PRINTF_TERMINAL_COM
-	  sprintf(string, "%u [app_terminal_com] [send_to_all_sensors_with_param] Adapted for slot number 0x%X.\n",(unsigned int) HAL_GetTick(),i);
-	  xQueueSend(pPrintQueue, string, 0);
-#endif
-	}
-    else
-    {
-#if PRINTF_TERMINAL_COM
-	  sprintf(string, "%u [app_terminal_com] [send_to_all_sensors_with_param] Slot number 0x%X not connected.\n",(unsigned int) HAL_GetTick(),i);
-	  xQueueSend(pPrintQueue, string, 0);
-#endif
-    }
-  }
-}
-
-void read_mac_address(imu_module *imu){
-	HAL_Delay(1);
-
-	uint8_t new_mac_adress [6];
-
-	for(uint8_t i = 0; i < 6; i++){
-		uint8_t a, b;
-		if(UART_IsDataAvailable(&huart7))	a = UART_COM_read(&huart7);
-		if(UART_IsDataAvailable(&huart7))	b = UART_COM_read(&huart7);
-		new_mac_adress [i] = convert_ASCII_to_HEX(a, b);
-	}
-
-	IMU_adjust_mac_address(imu, new_mac_adress);
-	USB_COM_print_buffer_mac_address(imu->name, imu->mac_address);
-
-}
 
 uint8_t convert_ASCII_to_HEX(uint8_t msn, uint8_t lsn)
 {
@@ -740,5 +581,4 @@ void module_status_overview(void)
 	}
   }
 }
-
 

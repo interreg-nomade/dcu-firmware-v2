@@ -166,7 +166,7 @@ void cpl_init_rx_task(void)
   memset(&flowControlRx, 0, sizeof(fc_rx_handler_t));
   sprintf(string, "cpl_init_rx_task done. \n");
   HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
-  osThreadDef(upLinksManager, upLinksManagerThread, osPriorityRealtime, 0, 4096);   /* Create upLinksManagerThread, was priority normal, but then issue with stopping a measurement */
+  osThreadDef(upLinksManager, upLinksManagerThread, osPriorityHigh, 0, 4096);   /* Create upLinksManagerThread, was priority normal, but then issue with stopping a measurement */
   cplRxTaskHandle = osThreadCreate(osThread(upLinksManager), NULL);				/* Start upLinksManagerThread */
   watchdog_timer_init(); 														/* Init watchdog timer and start it */
 }

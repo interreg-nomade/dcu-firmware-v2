@@ -8,7 +8,7 @@
 #ifndef APP_NRF52_COM_H_
 #define APP_NRF52_COM_H_
 
-#define MAX_nRF52_PAYLOAD_LENGTH 128
+#define MAX_nRF52_PAYLOAD_LENGTH 86 //128
 #define NRF52_START_DELIMITER   0x73
 
 typedef struct {

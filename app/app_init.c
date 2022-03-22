@@ -243,20 +243,26 @@ void initThread(const void * params)
   	else
   	{
 #if PRINTF_APP_INIT
-      sprintf(string, "%u [app_init] [initThread] No BLE nodes defined in RAW file. Upload new RAW file.\n.\n",(unsigned int) HAL_GetTick());
+      sprintf(string, "%u [app_init] [initThread] No BLE nodes defined in RAW file. Upload new RAW file.\n",(unsigned int) HAL_GetTick());
       xQueueSend(pPrintQueue, string, 0);
 #endif
   	}
   }
   for(;;)
   {
-	osDelay(4000);
+	osDelay(2000);
     if (rawFileRetrieved)
 	{
       if (numberOfModules)
       {
         if (numberOfModulesMACAddressAvailable != numberOfModules)
         {
+
+#if PRINTF_APP_INIT
+      sprintf(string, "%u [app_init] [initThread] Send mac addresses.\n",(unsigned int) HAL_GetTick());
+      xQueueSend(pPrintQueue, string, 0);
+#endif
+
           comm_set_mac_addr(mac_addr,sizeof(mac_addr));
         }
         else
@@ -446,7 +452,7 @@ void initThread(const void * params)
 //                    	if (numberOfModulesSynchronized != numberOfModules)
 //                    	{ // synchronize connected modules:
 #if PRINTF_APP_INIT
-                           xQueueSend(pPrintQueue, "[app_init] [initThread] Start module synchronization.\n", 0);
+                           //xQueueSend(pPrintQueue, "[app_init] [initThread] Start module synchronization.\n", 0);
 #endif
              	           // comm_set_sync(COMM_CMD_START_SYNC);
              	           // dcu_set_text_2_lines("Sync", "started");
@@ -457,11 +463,11 @@ void initThread(const void * params)
 //                    	else
 //                    	{ // now module measurements can start:
 #if PRINTF_APP_INIT
-                           xQueueSend(pPrintQueue, "[app_init] [initThread] Start module measurement.\n", 0);
+                           //xQueueSend(pPrintQueue, "[app_init] [initThread] Start module measurement.\n", 0);
 #endif
 
 
-             	          osDelay(8000);
+             	          osDelay(4000);
 
 
              	          dcu_set_text_2_lines("Connect", "Tablet");
