@@ -97,7 +97,7 @@ int numberOfModulesSynchronized = 0;
 
 static void oledThread_init(void)
 {
-	osThreadDef(oledManager, oledThread, osPriorityBelowNormal, 0, 256);
+	osThreadDef(oledManager, oledThread, osPriorityNormal, 0, 256);
 	oledThreadHanlder = osThreadCreate (osThread(oledManager), NULL);
 }
 
