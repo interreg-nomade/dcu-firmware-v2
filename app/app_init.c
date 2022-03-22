@@ -57,7 +57,7 @@
 #include "app_nRF52_com.h"
 
 /** OLED **/
-#include "ssd1306.h"
+#include "../lib/ssd1306_oled/ssd1306.h"
 
 #define PRINTF_APP_INIT 1
 
@@ -97,7 +97,7 @@ int numberOfModulesSynchronized = 0;
 
 static void oledThread_init(void)
 {
-	osThreadDef(oledManager, oledThread, osPriorityLow, 0, 256);
+	osThreadDef(oledManager, oledThread, osPriorityBelowNormal, 0, 256);
 	oledThreadHanlder = osThreadCreate (osThread(oledManager), NULL);
 }
 
