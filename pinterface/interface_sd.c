@@ -680,7 +680,7 @@ unsigned int rawConfigDecode()
 unsigned int rawConfigInit(void)
 {
   rawConfig.get();
-  memcpy(rawConfig.buffer, 0, sizeof(rawConfig.buffer));
+  memset(rawConfig.buffer, 0, sizeof(rawConfig.buffer));
   rawConfig.numElems = 0;
   rawConfig.release();
 #if INTERFACE_SD_DBG_PRINTF
