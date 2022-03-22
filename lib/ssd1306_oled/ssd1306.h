@@ -177,7 +177,7 @@ void ssd1306_GetDiff(uint8_t* buf1, uint8_t* buf2, uint8_t* diff);
 void ssd1306_nomade();
 void dcu_intro_text();
 void dcu_set_text(char* text);
-void dcu_set_text_battery2(char* text);
+void dcu_set_text_battery2(float *voltage);
 void dcu_set_text_small(char* text);
 void dcu_set_text_2_lines(char* text1, char* text2);
 
@@ -188,6 +188,7 @@ void dcu_set_text_cal_mag();
 
 /** Battery **/
 void ssd1306_battery();
+void dcu_set_text_battery_sensors(float *sensor1, float *sensor2, float *sensor3, float *sensor4, float *sensor5, float *sensor6);
 
 
 _END_STD_C
