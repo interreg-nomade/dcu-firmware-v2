@@ -33,12 +33,7 @@ static osThreadId nRF52RxTaskHandle;
 
 /* Com link protocol variables */
 static nRF52_msg_t nRF52RxMsg;
-static nRF52_PARSER_STATE nRF52State = nRF52_IDLE;
-static nRF52_DECODER_RESULT nRF52Res = nRF52_NO_MSG;
-
 static ring_buffer_t nRF52RingbufRx;
-
-int numberOfInvalidHeaders = 0;
 
 extern streamerServiceQueueMsg_t streamMsgEnabled;
 
@@ -60,8 +55,6 @@ extern int numberOfModulesSynchronized;
 
 extern char string[];
 extern QueueHandle_t pPrintQueue;
-
-extern uint8_t ringbufferFull;
 
 imu_module *imunRF52 = NULL;
 uint8_t previous_connected_modules [6];
@@ -93,6 +86,9 @@ imu_100Hz_data_t sensorModule4Event;
 imu_100Hz_data_t sensorModule5Event;
 imu_100Hz_data_t sensorModule6Event;
 
+BATTERY_ARRAY battery;
+
+
 void nRF52_init_rx_task(void)
 {
   osDelay(100);
@@ -118,7 +114,7 @@ void nRF52ComManagerThread(const void *params)
   int flag100HzModule6 = 0;
   for(;;)
   {
-	nRF52Res = nRF52_prot_decoder(&nRF52RxMsg);
+	nRF52_DECODER_RESULT nRF52Res = nRF52_prot_decoder(&nRF52RxMsg);
     if (nRF52Res == nRF52_CORRECT_FRAME)
 	{
       if (nRF52RxMsg.commandType == 1)
@@ -140,6 +136,9 @@ void nRF52ComManagerThread(const void *params)
 //      	  xQueueSend(pPrintQueue, string, 0);
 //#endif
     	  int32_t data[20];
+
+    	  int16_t test_data[3*3];
+
     	  uint64_t timestamp;
     	  int value = 0;
     	  uint16_t start_pos = 5;
@@ -171,9 +170,6 @@ void nRF52ComManagerThread(const void *params)
         	    // data[3] = rotVectors.k
 //  	    	    data[g] = ((nRF52RxMsg.DU[start_pos + g*4] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 1] << 16) |
 //  	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 2] << 8) | nRF52RxMsg.DU[start_pos + g*4 + 3]);
-  	    	    //data[g] = ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
-  	    	    //		   (nRF52RxMsg.DU[start_pos + g*4 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*4]);
-
 
   	    		int32_t data_temp = (int32_t) ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
   	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*4]);
@@ -188,6 +184,21 @@ void nRF52ComManagerThread(const void *params)
 	    	  //timestamp = nRF52RxMsg.DU[15] | (nRF52RxMsg.DU[16] << 8) | (nRF52RxMsg.DU[17] << 16) | (nRF52RxMsg.DU[18] << 24 |);
 	    	  //sprintf(string, "[app_nRF52_com] sample frequency: %u \n", (unsigned int) imu_array[0]->sampleFrequency);
 	    	  //xQueueSend(pPrintQueue, string, 0);
+
+  	    	  /*
+#if PRINTF_nRF52_COMMANAGER
+#define FIXED_POINT_FRACTIONAL_BITS_QUAT    30          // Number of bits used for comma part of quaternion data
+  	    	  float quatw = ((float)data[0] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+  	    	  float quati = ((float)data[1] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+  	    	  float quatj = ((float)data[2] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+  	    	  float quatk = ((float)data[3] / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT));
+
+          	  sprintf(string, "[app_nRF52_com] debug jona: real: %f - i: %f - j: %f - k: %f\n", quatw, quati, quatj, quatk);
+          	  xQueueSend(pPrintQueue, string, 0);
+
+          	  // OK - data komt hier goed toe en decoding OK
+#endif
+*/
   	          break;
   	        }
   	        case 0x02:
@@ -229,13 +240,37 @@ void nRF52ComManagerThread(const void *params)
   	    	    // data[11] = magnetometer.y
   	    	    // data[12] = magnetometer.z
 //  	    	    data[4 + g] = ((nRF52RxMsg.DU[start_pos + g*2] << 8) | nRF52RxMsg.DU[start_pos + g*2 + 1]);
-  	    	    //data[4 + g] = ((nRF52RxMsg.DU[start_pos + g*2 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
 
-    	    	int16_t data_temp = (int16_t) ((nRF52RxMsg.DU[start_pos + g*2 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
-    	    	data[4 + g] = (int32_t) data_temp;
+  	    		int16_t data_temp = (int16_t) ((nRF52RxMsg.DU[start_pos + g*2 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
+  	    	    data[4 + g] = (int32_t) data_temp;
 
-  	    		  //data[g] = (float)data[g]/(float)(1<<30);
+				test_data[g] = ((nRF52RxMsg.DU[start_pos + g*2 +1 ] << 8) | nRF52RxMsg.DU[start_pos + g*2]);
+
+  	    	    //data[g] = (float)data[g]/(float)(1<<30);
   	    	  }
+
+  	    	  /*
+#define RAW_Q_FORMAT_GYR_COMMA_BITS         5           // Number of bits used for comma part of raw data.
+#define RAW_Q_FORMAT_ACC_COMMA_BITS         10          // Number of bits used for comma part of raw data.
+	    	    float test_gyro_x = ((float)test_data[3] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
+	    	    float test_gyro_y = ((float)test_data[4] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
+	    	    float test_gyro_z = ((float)test_data[5] / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS));
+
+	    	    float test_accel_x = ((float)test_data[0] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+	    	  	float test_accel_y = ((float)test_data[1] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+	    		float test_accel_z = ((float)test_data[2] / (float)(1 << RAW_Q_FORMAT_ACC_COMMA_BITS));
+*/
+
+#if PRINTF_nRF52_COMMANAGER
+          	  //sprintf(string, "[app_nRF52_com] debug jona: accel x: %f - y: %f - z %f\n", test_accel_x, test_accel_y, test_accel_z);
+          	  //xQueueSend(pPrintQueue, string, 0);
+          	  /** TODO: Tot hier komt de data goed toe **/
+
+          	  //sprintf(string, "[app_nRF52_com] debug jona: gyro x: %f - y: %f - z %f", test_gyro_x, test_gyro_y, test_gyro_z);
+          	  //xQueueSend(pPrintQueue, string, 0);
+#endif
+
+
   	    	  for (uint8_t g = 0x1E; g > 0x16; g--)
   	    	  {
      	        timestamp = (timestamp << 8) | nRF52RxMsg.DU[g];
@@ -694,6 +729,21 @@ void nRF52ComManagerThread(const void *params)
 			sprintf(string, "%u [app_nRF52_com] [nRF52ComManagerThread] nRF52 module REQ_BATTERY_LEVEL command received.\n",(unsigned int) HAL_GetTick());
 			xQueueSend(pPrintQueue, string, 0);
 #endif
+
+			memcpy(&battery, &nRF52RxMsg.DU[4], sizeof(battery));
+
+#if PRINTF_nRF52_COMMANAGER
+			sprintf(string, "%u [app_nRF52_com] [nRF52ComManagerThread] battery: %.2f - %.2f - %.2f - %.2f - %.2f - %.2f",
+					(unsigned int) HAL_GetTick(),
+					battery.batt[0].voltage,
+					battery.batt[1].voltage,
+					battery.batt[2].voltage,
+					battery.batt[3].voltage,
+					battery.batt[4].voltage,
+					battery.batt[5].voltage);
+			xQueueSend(pPrintQueue, string, 0);
+#endif
+
 		  }
 		  break;
 		  case COMM_CMD_OK:
@@ -935,13 +985,12 @@ void nRF52ComManagerThread(const void *params)
 				xQueueSend(pPrintQueue, string, 0);
 #endif
 				osDelay(2000);
-				//comm_calibrate();
+				// comm_calibrate();
 				for (int i = 0; i < numberOfModules; i++)
 				 {
 				   imu_array[i]->is_calibrated = COMM_CMD_CALIBRATION_DONE;
 				 }
 				numberOfModulesCalibrated = numberOfModules;
-
 				//HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_RESET);
 				//HAL_GPIO_WritePin(LED_BUSY_GPIO_Port, LED_BUSY_Pin, GPIO_PIN_SET);
 			 }
@@ -956,42 +1005,33 @@ void nRF52ComManagerThread(const void *params)
 		  }
 		}
       }
-      //nRF52_rst_msg(&nRF52RxMsg);
-      //nRF52Res = nRF52_NO_MSG;
-      //nRF52State = nRF52_IDLE;
 	}
-//    else
-//    {
-//      if (nRF52Res == nRF52_INCORRECT_FRAME)
-//      {
-//#if PRINTF_nRF52_COM
-//    	if (ring_buffer_is_full(&nRF52RingbufRx))
-//    	{
-//    	  sprintf(string, "Ring buffer full, oldest byte being overwritten. \n");
-//    	  xQueueSend(pPrintQueue, string, 0);
-////    	  ringbufferFull = 0;
-//    	}
-//        char DUString[4];
-//        sprintf(string, "nRF52 rec buffer: 0x");
-//        xQueueSend(pPrintQueue, string, 0);
-//        int loper = 0;
-//        for (int i = 0; i < nRF52RxMsg.length; i++)
-//        {
-//          sprintf(DUString, "%02X ",nRF52RxMsg.DU[i]);
-//          strcat(string, DUString);
-//          if (loper++ > 16)
-//          {
-//          	loper = 0;
-//            xQueueSend(pPrintQueue, string, 0);
-//            sprintf(string, "");
-//          }
-//        }
-//        sprintf(DUString, "  \n");
-//        strcat(string, DUString);
-//        xQueueSend(pPrintQueue, string, 0);
-//#endif
-//      }
-//    }
+    else
+    {
+      if (nRF52Res == nRF52_INCORRECT_FRAME)
+      {
+#if PRINTF_nRF52_COM
+        char DUString[4];
+        sprintf(string, "nRF52 rec buffer: 0x");
+        xQueueSend(pPrintQueue, string, 0);
+        int loper = 0;
+        for (int i = 0; i < nRF52RxMsg.length; i++)
+        {
+          sprintf(DUString, "%02X ",nRF52RxMsg.DU[i]);
+          strcat(string, DUString);
+          if (loper++ > 16)
+          {
+          	loper = 0;
+            xQueueSend(pPrintQueue, string, 0);
+            sprintf(string, "");
+          }
+        }
+        sprintf(DUString, "  \n");
+        strcat(string, DUString);
+        xQueueSend(pPrintQueue, string, 0);
+#endif
+      }
+    }
 	osDelay(2); // every 2ms
   }
 }
@@ -1008,113 +1048,183 @@ void nRF52_init()
     nRF52_rst_msg(&nRF52RxMsg);
 }
 
-void nRF52_rst_msg(nRF52_msg_t * nRF52RxMsg)
+void nRF52_rst_msg(nRF52_msg_t * nRF52Msg)
 {
-  if (nRF52RxMsg != NULL)
+  if (nRF52Msg != NULL)
   {
-	nRF52RxMsg->command = 0;
-	nRF52RxMsg->length = 0;
-	nRF52RxMsg->CS = 0;
-    memset(nRF52RxMsg->DU, 0, MAX_nRF52_PAYLOAD_LENGTH);
+	nRF52Msg->command = 0;
+	nRF52Msg->length = 0;
+	nRF52Msg->CS = 0;
+    memset(nRF52Msg->DU, 0, MAX_nRF52_PAYLOAD_LENGTH);
   }
 }
 
-nRF52_DECODER_RESULT nRF52_prot_decoder(nRF52_msg_t * nRF52RxMsg)
+nRF52_DECODER_RESULT nRF52_prot_decoder(nRF52_msg_t * nRF52Msg)
 {
-//  static nRF52_PARSER_STATE nRF52State = nRF52_IDLE;
-  nRF52Res = nRF52_NO_MSG;
-
+  static nRF52_PARSER_STATE nRF52State = nRF52_IDLE;
+  nRF52_DECODER_RESULT nRF52Res = nRF52_NO_MSG;
   static unsigned int timeout = 0;
+
   switch (nRF52State)
   {
-    case nRF52_IDLE: // check if start delimiter is found
+    case nRF52_IDLE: // check if start byte is found
     {
-      //nRF52_rst_msg(&nRF52RxMsg);
-      nRF52_RstTimeout(&timeout);
       if (nRF52_FindSdByte())
       {
+//#if PRINTF_nRF52_COM
+//        sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_IDLE] found nRF52 Start Delimiter.\n",(unsigned int) HAL_GetTick());
+//	    xQueueSend(pPrintQueue, string, 0);
+//#endif
+//        nRF52_RstTimeout(&timeout);
+//        nRF52_rst_msg(&tmpnRF52Msg);
 	    nRF52State = nRF52_BUILDING_HEADER;
       }
       else
       {
+    	nRF52Res = nRF52_NO_MSG;
         break;
       }
     }
+
     /* no break */
+
     case  nRF52_BUILDING_HEADER: // check if command and length is available
     {
+
+//#if PRINTF_nRF52_COM
+//      sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Start building header.\n",(unsigned int) HAL_GetTick());
+//      xQueueSend(pPrintQueue, string, 0);
+//#endif
       if (nRF52_HeaderPartPresent())
       {
-        nRF52_RstTimeout(&timeout);
+//#if PRINTF_nRF52_COM
+//        sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] nRF52 header part present.\n",(unsigned int) HAL_GetTick());
+//	    xQueueSend(pPrintQueue, string, 0);
+//#endif
+//        nRF52_RstTimeout(&timeout);
         if (nRF52_BuildHeader())
-        { // Header can be built
+        {
+          /* Could build a header */
+//#if PRINTF_nRF52_COM
+//          sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Command received is 0x%02X\n",(unsigned int) HAL_GetTick(), nRF52RxMsg.command);
+//	      xQueueSend(pPrintQueue, string, 0);
+//          sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Length of body is %d\n",(unsigned int) HAL_GetTick(), nRF52RxMsg.length);
+//	      xQueueSend(pPrintQueue, string, 0);
+//#endif
 	      nRF52State = nRF52_BUILDING_BODY;
 	      nRF52Res = nRF52_IN_PROGRESS;
         }
         else
-        { // Invalid header
-          char rxdByte;
-          rxdByte = 0;
-          ring_buffer_peek(&nRF52RingbufRx, &rxdByte, 0);
-          ring_buffer_dequeue(&nRF52RingbufRx, &rxdByte);
-          //nRF52_rst_msg(&nRF52RxMsg);
-          numberOfInvalidHeaders++;
+        {
+          /* Invalid header */
+
+          if (nRF52_TimedOut(&timeout))
+          {
+#if PRINTF_nRF52_COM
+            sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Time out in building header.\n",(unsigned int) HAL_GetTick());
+    	    xQueueSend(pPrintQueue, string, 0);
+            sprintf(string,"Less than 2 elements in the buffer, back to idle\n");
+    	    xQueueSend(pPrintQueue, string, 0);
+#endif
+  			//ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, ring_buffer_num_items(&nRF52RingbufRx));
+          }
 	      nRF52State = nRF52_IDLE;
 	      nRF52Res = nRF52_NO_MSG;
           break;
         }
       }
       else
-      { // wait for data or reset if timeout reached
+      {
         if (nRF52_TimedOut(&timeout))
         {
+
 #if PRINTF_nRF52_COM
-          sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Time out in building header, back to idle.\n",(unsigned int) HAL_GetTick());
+          sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Time out in building header.\n",(unsigned int) HAL_GetTick());
+    	  xQueueSend(pPrintQueue, string, 0);
+          sprintf(string,"Less than 2 elements in the buffer, back to idle\n");
     	  xQueueSend(pPrintQueue, string, 0);
 #endif
-          char rxdByte;
-          rxdByte = 0;
-          ring_buffer_peek(&nRF52RingbufRx, &rxdByte, 0);
-          ring_buffer_dequeue(&nRF52RingbufRx, &rxdByte);
-          //nRF52_rst_msg(&nRF52RxMsg);
-          nRF52State = nRF52_IDLE;
-  	      nRF52Res = nRF52_NO_MSG;
+    	  //ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, ring_buffer_num_items(&nRF52RingbufRx));
         }
+        else
+        {
+//#if PRINTF_nRF52_COM
+//          sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_HEADER] Wrong header.\n",(unsigned int) HAL_GetTick());
+//    	  xQueueSend(pPrintQueue, string, 0);
+//#endif
+        }
+        nRF52State = nRF52_IDLE;
+	    nRF52Res = nRF52_NO_MSG;
         break;
       }
     }
+
     /* no break */
+
     case  nRF52_BUILDING_BODY: // check if payload is available (length bytes)
     {
+
+//#if PRINTF_nRF52_COM
+//      sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_BODY] start building body.\n",(unsigned int) HAL_GetTick());
+//      xQueueSend(pPrintQueue, string, 0);
+//#endif
       if (nRF52_BodyPartPresent())
-      { // Body can be built
+      {
+//#if PRINTF_nRF52_COM
+//        sprintf(string,"nRF52_BodyPartPresent, %u elements in ringbuffer, >= %d length.\n",(unsigned int) ring_buffer_num_items(&nRF52RingbufRx),(nRF52RxMsg.length));
+//	    xQueueSend(pPrintQueue, string, 0);
+//#endif
+        if (nRF52_BuildBody())
+        {
+//#if PRINTF_nRF52_COM
+//          sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_BODY] Going to check frame\n",(unsigned int) HAL_GetTick());
+//	      xQueueSend(pPrintQueue, string, 0);
+//#endif
+	      nRF52State = nRF52_CHECKING_FRAME;
+	      nRF52Res = nRF52_IN_PROGRESS;
+        }
+        else
+        {
+	      nRF52State = nRF52_IDLE;
+	      nRF52Res = nRF52_NO_MSG;
+
+          if (nRF52_TimedOut(&timeout))
+          {
+#if PRINTF_nRF52_COM
+            sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_BODY] Time out in building body. smState = CPL_IDLE.\n",(unsigned int) HAL_GetTick());
+	        xQueueSend(pPrintQueue, string, 0);
+	        sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_BODY] Back to Idle\n",(unsigned int) HAL_GetTick());
+		    xQueueSend(pPrintQueue, string, 0);
+#endif
+			//ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, ring_buffer_num_items(&nRF52RingbufRx));
+          }
+          break;
+        }
         nRF52_RstTimeout(&timeout);
-        nRF52_BuildBody();
-	    nRF52State = nRF52_CHECKING_FRAME;
-	    nRF52Res = nRF52_IN_PROGRESS;
       }
       else
-      { // wait for data or reset if timeout reached
+      {
+		//ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, ring_buffer_num_items(&nRF52RingbufRx));
+        nRF52State = nRF52_IDLE;
+        nRF52Res = nRF52_NO_MSG;
+
         if (nRF52_TimedOut(&timeout))
         {
 #if PRINTF_nRF52_COM
           sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_BUILDING_BODY] Time out in building body. smState = CPL_IDLE.\n",(unsigned int) HAL_GetTick());
 	      xQueueSend(pPrintQueue, string, 0);
-          sprintf(string,"nRF52 body part not present: expected %d elements, but only %u elements available, back to idle.\n",(nRF52RxMsg->length),(unsigned int) ring_buffer_num_items(&nRF52RingbufRx));
+          sprintf(string,"nRF52 body part not present: expected %d elements, but only %u elements available, back to idle.\n",(nRF52RxMsg.length),(unsigned int) ring_buffer_num_items(&nRF52RingbufRx));
 	      xQueueSend(pPrintQueue, string, 0);
 #endif
-          char rxdByte;
-          rxdByte = 0;
-          ring_buffer_peek(&nRF52RingbufRx, &rxdByte, 0);
-          ring_buffer_dequeue(&nRF52RingbufRx, &rxdByte);
-          //nRF52_rst_msg(&nRF52RxMsg);
-	      nRF52State = nRF52_IDLE;
-	      nRF52Res = nRF52_NO_MSG;
+	      //ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, ring_buffer_num_items(&nRF52RingbufRx));
         }
+
         break;
       }
     }
+
     /* no break */
+
     case  nRF52_CHECKING_FRAME: // calculate checksum and compare
     {
 //#if PRINTF_nRF52_COM
@@ -1139,22 +1249,24 @@ nRF52_DECODER_RESULT nRF52_prot_decoder(nRF52_msg_t * nRF52RxMsg)
 //#endif
       if (nRF52_csCorrect())
       {
+//#if PRINTF_nRF52_COM
+//        sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_CHECKING_FRAME] Check Sum correct.\n",(unsigned int) HAL_GetTick());
+//	    xQueueSend(pPrintQueue, string, 0);
+//#endif
 	    nRF52Res = nRF52_CORRECT_FRAME;
+	    nRF52State = nRF52_IDLE;
+        break;
       }
       else
       {
-	    numberOfInvalidHeaders = 0;
+#if PRINTF_nRF52_COM
+        sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_CHECKING_FRAME] Check Sum not correct, back to Idle.\n",(unsigned int) HAL_GetTick());
+	    xQueueSend(pPrintQueue, string, 0);
+#endif
+//		ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, ring_buffer_num_items(&nRF52RingbufRx));
+	    nRF52State = nRF52_IDLE;
 	    nRF52Res = nRF52_INCORRECT_FRAME;
       }
-      nRF52State = nRF52_IDLE;
-      break;
-    }
-    default:
-    {
-#if PRINTF_nRF52_COM
-      sprintf(string,"%u [app_nRF52_com] [nRF52_prot_decoder] nRF52State invalid.\n",(unsigned int) HAL_GetTick());
-      xQueueSend(pPrintQueue, string, 0);
-#endif
     }
   }
   return nRF52Res;
@@ -1169,11 +1281,31 @@ static int nRF52_FindSdByte(void)
 	ring_buffer_peek(&nRF52RingbufRx, &rxdByte, 0);
     if (rxdByte == NRF52_START_DELIMITER)
     {
-      // sometimes, a second start delimiter occurs. Check next byte and if also start delimiter, remove:
+//#if PRINTF_nRF52_COM
+//      sprintf(string,"%u [app_nRF52_com] [nRF52_FindSdByte] Found start byte.\n",(unsigned int) HAL_GetTick());
+//	  xQueueSend(pPrintQueue, string, 0);
+//#endif
+      // Sometimes, a second start delimiter occurs, see example:
+	  //                                     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+      //                                                   +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---+ +---------------------+
+      // 20220219 17:48:43.507 -> 139193 [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_CHECKING_FRAME] Check Sum not correct, back to Idle.
+      // 17:48:43.547 -> nRF52 rec buffer:0x73 73 20 01 00 03 CE FF 1E 00 11 04 01 00 F3 FF EC FF D9 FF 22 01 BC FD F2 0F 01 00 E9 FF FF FF DB
+      //                                        +---> 2x 73!
+      //                                    73 20 01 00 03 BD FF 1D 00 00 04 FC FF 00 00 FE FF EF FF 24 01 BE FD 06 10 01 00 E9 FF FF FF 7F
+      //                                    73 20 01 00 03 C7 FF 26 00 FE 03 09 00 F9 FF F2 FF E5 FF 22 01 B0 FD 1A 10 01 00 E9 FF FF FF D9
+      //                                    73 20 01 00 03 C3 FF 1A 00 0B 04 0B 00 FB FF F6 FF E3
+
+      // 20220219 17:51:37.513 -> 313143 [app_nRF52_com] [nRF52_prot_decoder] [nRF52State = nRF52_CHECKING_FRAME] Check Sum not correct, back to Idle.
+      //                                  0x73 73 20 01 00 03 7A FF 88 FF A5 04 AE 0E 27 FD 08 06 C1 FF 61 FF 7A FD A2 B7 03 00 E9 FF FF FF 51
+      //                                        +---> 2x 73!
+      //                                    73 20 01 00 03 81 FF 86 FF 6D 04 E5 0E 48 00 AA 06 B7 FF 7B FF 6C FD B6 B7 03 00 E9 FF FF FF 79
+      //                                    73 20 01 00 03 71 FF 70 FF 4F 04 3B 10 38 02 A7 06 9D FF 89 FF 86 FD CA B7 03 00 E9 FF FF FF AC
+      //                                    73 20 01 00 03 2F FF AC FF 41 04 EC 12 5D 07 30 05 72
+      // check if the next byte in the ringbuffer is also the start delimiter. If so, remove.
       ring_buffer_peek(&nRF52RingbufRx, &rxdByte, 1);
       if (rxdByte == NRF52_START_DELIMITER)
       {
-        ring_buffer_dequeue(&nRF52RingbufRx, &rxdByte);
+    	ring_buffer_dequeue(&nRF52RingbufRx, &rxdByte);
       }
       return 1;
     }
@@ -1184,29 +1316,21 @@ static int nRF52_FindSdByte(void)
   }
   return 0;
 }
-
 static int nRF52_HeaderPartPresent(void)
 {
-  // Example (command): 0x73 07 02 06 00 01 71
-  //                       |  |  |  |  |  |  |
-  //                       |  |  |  |  |  |  +--> CS
-  //                       |  |  |  |  |  +--> always 1?
-  //                       |  |  |  |  +--> module nr, from 0 to 7.
-  //                       |  |  |  +--> COMM_CMD_SYNC
-  //                       |  |  +--> command type: CONFIG
-  //                       |  +--> total length of packet
-  //                       +--> start delimiter
-  // Example (data)     0x73 1E 01 01 01 00 58 CF 3F E0 3E 6E FC 70 47 25 01 74 1C D1 FC B8 43 00 00 E9 FF FF FF 33
-  //                       |  |  |  |  | +----v----+ +----v----+ +----v----+ +----v----+ +----------v----------+  |
-  //                       |  |  |  |  |  rotVect.r   rotVect.i   rotVect.j   rotVect.k        epochNow_Ms        +--> CS
-  //                       |  |  |  |  +--> Data Type: Quaternions = 1, Euler = 2, RAW = 3
-  //                       |  |  |  +--> sensor nr
-  //                       |  |  +--> command type: DATA
-  //                       |  +--> total length of packet
-  //                       +--> start delimiter
-  if (ring_buffer_num_items(&nRF52RingbufRx) > 4)
-  { //  4 items in the ring buffer is enough
-	return 1;
+  char rxdByte;
+  rxdByte = 0;
+  ring_buffer_peek(&nRF52RingbufRx, &rxdByte, 2);
+  if (ring_buffer_num_items(&nRF52RingbufRx) >= 2) // packet_len byte + command byte
+  {
+	if (( rxdByte == 1) || (rxdByte == 2)) // 1 is DATA, 2 is CONFIG
+	{
+	  return 1;
+	}
+    else
+    {
+      return 0;
+    }
   }
   else
   {
@@ -1218,40 +1342,27 @@ static int nRF52_BuildHeader(void)
 {
   char rxdByte[3];
   memset(rxdByte, 0, 3);
-  ring_buffer_peek(&nRF52RingbufRx, &rxdByte[0], 1);
-  ring_buffer_peek(&nRF52RingbufRx, &rxdByte[1], 2);
-  ring_buffer_peek(&nRF52RingbufRx, &rxdByte[2], 3);
-  nRF52RxMsg.length = (int) rxdByte[0];
-  nRF52RxMsg.commandType = rxdByte[1];
-  nRF52RxMsg.command = rxdByte[2];
-  if (nRF52RxMsg.commandType == 1)
-  { // DATA
-    if ((nRF52RxMsg.length == 0x20 || nRF52RxMsg.length == 0x1E) && nRF52RxMsg.command < 0x06)
-    { // DATA length is either 0x20 (RAW) or 0x1E (QUATERNIONS) and the command is the sensor module nr in case of DATA, which needs to be smaller than 6
+  if (ring_buffer_num_items(&nRF52RingbufRx) >= 3)
+  {
+    ring_buffer_peek(&nRF52RingbufRx, &rxdByte[0], 1);
+    ring_buffer_peek(&nRF52RingbufRx, &rxdByte[1], 2);
+    ring_buffer_peek(&nRF52RingbufRx, &rxdByte[2], 3);
+    nRF52RxMsg.length = (int) rxdByte[0];
+    nRF52RxMsg.commandType = rxdByte[1];
+    nRF52RxMsg.command = rxdByte[2];
+    if ((nRF52RxMsg.commandType == 1 && (nRF52RxMsg.length == 0x20 || nRF52RxMsg.length == 0x1E)) || (nRF52RxMsg.commandType == 2 && nRF52RxMsg.length < 0x55)) // DATA length is either 0x20 (RAW) or 0x1E (QUATERNIONS)
+    {
       return 1;
     }
     else
-    { // can not be a correct header
+    {
       return 0;
     }
   }
   else
   {
-    if (nRF52RxMsg.commandType == 2)
-    { // CONFIG
-      if (nRF52RxMsg.length < 0x56 && nRF52RxMsg.command < 0x0E)
-      { // max length is 0x55 in case of COMM_CMD_REQ_CONN_DEV_LIST and max command is 0x0D
-        return 1;
-      }
-      else
-      { // can not be a correct header
-    	return 0;
-      }
-    }
-    else
-    { // can not be a correct header
-      return 0;
-    }
+    /* Less than 2 elems in the buffer */
+	return 0;
   }
 }
 
@@ -1270,10 +1381,22 @@ static int nRF52_BodyPartPresent(void)
 static int nRF52_BuildBody(void)
 {
   for (unsigned int i = 0; i < (nRF52RxMsg.length); i++)
-  { // further optimization possible... the first 2 received bytes are not needed in the DU, see also csCorrect()
-	ring_buffer_peek(&nRF52RingbufRx, (char*)&nRF52RxMsg.DU[i], i);
+  {
+    if (!ring_buffer_peek(&nRF52RingbufRx, (char*)&nRF52RxMsg.DU[i], i))
+    {
+      /* No item at index... */
+#if PRINTF_nRF52_COM
+      sprintf(string,"%u [app_nRF52_com] [nRF52_BuildBody] ring_buffer_peek(), no item at index %02X\n",(unsigned int) HAL_GetTick(), nRF52RxMsg.DU[i]);
+      xQueueSend(pPrintQueue, string, 0);
+#endif
+      return 0;
+    }
+    ring_buffer_peek(&nRF52RingbufRx, (char*)&nRF52RxMsg.CS, nRF52RxMsg.length-1);
   }
-  ring_buffer_peek(&nRF52RingbufRx, (char*)&nRF52RxMsg.CS, nRF52RxMsg.length-1);
+//#if PRINTF_nRF52_COM
+//  sprintf(string,"%u [app_nRF52_com] [nRF52_BuildBody] Data Units of ring_buffer correctly transferred to nRF52RxMsg.DU\n",(unsigned int) HAL_GetTick());
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
   return 1;
 }
 
@@ -1281,64 +1404,37 @@ static int nRF52_csCorrect(void)
 {
   char CScalc = 0x00;
   for (unsigned int i = 0; i < (nRF52RxMsg.length-1); i++)
-  { // further optimization possible if CS is only calculated on DU
+  {
     CScalc ^= nRF52RxMsg.DU[i];
   }
+  ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, nRF52RxMsg.length);
   if (CScalc == nRF52RxMsg.CS)
-  { // only dequeue ring buffer if CS is correct! And not the whole frame is being removed.
-	ring_buffer_dequeue_arr(&nRF52RingbufRx, NULL, nRF52RxMsg.length-2);
+  {
 	return 1;
   }
   else
   {
-#if PRINTF_nRF52_COM
-	sprintf(string,"%u [app_nRF52_com] CS fault, back to Idle, # of invalid headers since last CS fault: %u.\n",(unsigned int) HAL_GetTick(),(unsigned int)numberOfInvalidHeaders);
-	xQueueSend(pPrintQueue, string, 0);
-	if (ring_buffer_is_full(&nRF52RingbufRx))
-	{
-	  sprintf(string, "Ring buffer full, oldest byte being overwritten. \n");
-	  xQueueSend(pPrintQueue, string, 0);
-	}
-    char DUString[4];
-	sprintf(string, "nRF52 rec buffer: 0x");
-	xQueueSend(pPrintQueue, string, 0);
-	int loper = 0;
-	for (int i = 0; i < nRF52RxMsg.length; i++)
-	{
-	  sprintf(DUString, "%02X ",nRF52RxMsg.DU[i]);
-	  strcat(string, DUString);
-	  if (loper++ > 16)
-	  {
-	    loper = 0;
-	    xQueueSend(pPrintQueue, string, 0);
-	    sprintf(string, "");
-	  }
-	}
-	sprintf(DUString, "  \n");
-	strcat(string, DUString);
-	xQueueSend(pPrintQueue, string, 0);
-#endif
     return 0;
   }
 }
 
 static int nRF52_TimedOut(unsigned int * var)
 {
-  *var++;
-  if (*var >= 0x100)
-  {
-    *var = 0;
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
+    *var = *var +1;
+    if (*var >= 0x100)
+    {
+        *var = 0;
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 static void nRF52_RstTimeout(unsigned int * var)
 {
-  *var = 0;
+    *var = 0;
 }
 
 //void rsv_data_handler(uint8_t * buf, uint8_t sensor_number, uint8_t data_format){
@@ -1392,12 +1488,15 @@ static void BLEmoduleDataToSensorEvent1(int32_t data[20], imu_100Hz_data_t *sens
    sensorEvent->rotVectors1.i    = data[1];
    sensorEvent->rotVectors1.j    = data[2];
    sensorEvent->rotVectors1.k    = data[3];
-   sensorEvent->accelerometer1.x = data[4];
-   sensorEvent->accelerometer1.y = data[5];
-   sensorEvent->accelerometer1.z = data[6];
+
    sensorEvent->gyroscope1.x     = data[7];
    sensorEvent->gyroscope1.y     = data[8];
    sensorEvent->gyroscope1.z     = data[9];
+
+   sensorEvent->accelerometer1.x = data[4];
+   sensorEvent->accelerometer1.y = data[5];
+   sensorEvent->accelerometer1.z = data[6];
+
    sensorEvent->magnetometer1.x  = data[10];
    sensorEvent->magnetometer1.y  = data[11];
    sensorEvent->magnetometer1.z  = data[12];
@@ -1409,13 +1508,21 @@ static void BLEmoduleDataToSensorEvent2(int32_t data[20], imu_100Hz_data_t *sens
    sensorEvent->rotVectors2.i    = data[1];
    sensorEvent->rotVectors2.j    = data[2];
    sensorEvent->rotVectors2.k    = data[3];
-   sensorEvent->accelerometer2.x = data[4];
-   sensorEvent->accelerometer2.y = data[5];
-   sensorEvent->accelerometer2.z = data[6];
+
    sensorEvent->gyroscope2.x     = data[7];
    sensorEvent->gyroscope2.y     = data[8];
    sensorEvent->gyroscope2.z     = data[9];
+
+   sensorEvent->accelerometer2.x = data[4];
+   sensorEvent->accelerometer2.y = data[5];
+   sensorEvent->accelerometer2.z = data[6];
+
    sensorEvent->magnetometer2.x  = data[10];
    sensorEvent->magnetometer2.y  = data[11];
    sensorEvent->magnetometer2.z  = data[12];
+}
+
+void get_battery_levels(BATTERY_ARRAY *batt)
+{
+	memcpy(batt, &battery, sizeof(*batt));
 }

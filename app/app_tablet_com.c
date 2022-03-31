@@ -80,8 +80,6 @@ bool tablet_time_received = 0;
 #define USB_TABLET_COM_WATCHDOG_TIMEOUT     500
 #define USB_AUTOMATIC_COMMUNICATION 		  1
 
-
-
 /* ***** Watchdog ***** */
 static TimerHandle_t xWatchdogTimerHandle;
 static unsigned int tLastWatchdogMsg = 0;
@@ -1769,6 +1767,7 @@ void tablet_com_send_watchdog_msg(char ad)
 
 //watchdogTimerCallback
 
+
 bool tablet_get_time_received(void)
 {
 	return tablet_time_received;
@@ -1778,3 +1777,4 @@ void tablet_set_time_received(bool state)
 {
 	tablet_time_received = state;
 }
+

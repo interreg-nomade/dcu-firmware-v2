@@ -3,7 +3,7 @@
 uint32_t volatile putI; // put next
 uint32_t volatile getI; // get next
 
-unsigned char fifo[FIFOSIZE];
+unsigned char fifo1[FIFOSIZE];
 
 void fifo_init_index(void){
 	// make atomic if it aims to be used in an ISR
@@ -15,7 +15,7 @@ int fifo_index_put(unsigned char data){
 		return -1;
 	}
 
-	fifo[putI & (FIFOSIZE - 1)] = data;
+	fifo1[putI & (FIFOSIZE - 1)] = data;
 	putI++;
 
 	return 1;
@@ -26,7 +26,7 @@ int fifo_index_get(unsigned char * pData){
 		return -1;
 	}
 
-	*pData = fifo[getI &(FIFOSIZE-1)];
+	*pData = fifo1[getI &(FIFOSIZE-1)];
 	getI ++;
 
 	return 0;

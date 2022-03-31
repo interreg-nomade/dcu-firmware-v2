@@ -25,6 +25,7 @@ extern QueueHandle_t pPrintQueue;
 #define PRINTF_OPERATIONS_DBG 1
 
 
+
 /* In general: two types of operations:
  * 1. Structure to ASCII
  *
@@ -767,15 +768,11 @@ int datatypeToRaw_imu_quat(imu_100Hz_data_t * pImu, unsigned char *dest)
   unsigned int rotScale = 1;
   memset(&imu, 0, sizeof(imu_100Hz_data_t));
   imu = *pImu; // Copy data as we will modify it
-//  imu.rotVectors1.real *= rotScale;
-//  imu.rotVectors1.i    *= rotScale;
-//  imu.rotVectors1.j    *= rotScale;
-//  imu.rotVectors1.k    *= rotScale;
 
-// Decode quaternions
+  // Decode quaternions
   decode_quat_50hz(&imu, &imu);
 
-// Send to tablet
+  // Send to tablet
   short tmp = 0; /* Temporary variable used for the type cast and shift */
 	tmp = (short) imu.rotVectors1.real;
 	dest[0] = tmp >> 8 & 0xFF;
@@ -974,116 +971,6 @@ int datatypeToRaw_imu_quat_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
   unsigned int rotScale = 1;
   memset(&imu, 0, sizeof(imu_100Hz_data_t));
   imu = *pImu; // Copy data as we will modify it
-//  imu.rotVectors1.real *= rotScale;
-//  imu.rotVectors1.i    *= rotScale;
-//  imu.rotVectors1.j    *= rotScale;
-//  imu.rotVectors1.k    *= rotScale;
-//  imu.rotVectors2.real *= rotScale;
-//  imu.rotVectors2.i    *= rotScale;
-//  imu.rotVectors2.j    *= rotScale;
-//  imu.rotVectors2.k    *= rotScale;
-
-  // Decoding
-    decode_quat_100hz(&imu, &imu);
-
-  short tmp = 0; /* Temporary variable used for the type cast and shift */
-  tmp = (short) imu.rotVectors1.real;
-  dest[0] = tmp >> 8 & 0xFF;
-  dest[1] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors1.i;
-  dest[2] = tmp >> 8 & 0xFF;
-  dest[3] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors1.j;
-  dest[4] = tmp >> 8 & 0xFF;
-  dest[5] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors1.k;
-  dest[6] = tmp >> 8 & 0xFF;
-  dest[7] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors2.real;
-  dest[8] = tmp >> 8 & 0xFF;
-  dest[9] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors2.i;
-  dest[10] = tmp >> 8 & 0xFF;
-  dest[11] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors2.j;
-  dest[12] = tmp >> 8 & 0xFF;
-  dest[13] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors2.k;
-  dest[14] = tmp >> 8 & 0xFF;
-  dest[15] = tmp & 0xFF;
-
-//#if PRINTF_OPERATIONS_DBG
-//	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
-//												(unsigned int) HAL_GetTick(),
-//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
-//  xQueueSend(pPrintQueue, string, 0);
-//#endif
-
-  return 16;
-}
-
-int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest)
-{
-  if (!dest || !pImu)
-  { /* Try the pointers */
-	return 0;
-  }
-  imu_100Hz_data_t imu;
-  unsigned int scale = 1;
-  unsigned int rotScale = 1;
-  memset(&imu, 0, sizeof(imu_100Hz_data_t));
-  imu = *pImu; // Copy data as we will modify it
-//  imu.rotVectors1.real *= rotScale;
-//  imu.rotVectors1.i    *= rotScale;
-//  imu.rotVectors1.j    *= rotScale;
-//  imu.rotVectors1.k    *= rotScale;
-
-  // Decoding
-  decode_quat_50hz(&imu, &imu);
-
-  short tmp = 0; /* Temporary variable used for the type cast and shift */
-  tmp = (short) imu.rotVectors1.real;
-  dest[0] = tmp >> 8 & 0xFF;
-  dest[1] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors1.i;
-  dest[2] = tmp >> 8 & 0xFF;
-  dest[3] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors1.j;
-  dest[4] = tmp >> 8 & 0xFF;
-  dest[5] = tmp & 0xFF;
-  tmp = (short) imu.rotVectors1.k;
-  dest[6] = tmp >> 8 & 0xFF;
-  dest[7] = tmp & 0xFF;
-
-//#if PRINTF_OPERATIONS_DBG
-//  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
-//												(unsigned int) HAL_GetTick(),
-//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
-//  xQueueSend(pPrintQueue, string, 0);
-//#endif
-
-  return 8;
-}
-
-int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
-{
-  if (!dest || !pImu)
-  { /* Try the pointers */
-	return 0;
-  }
-  imu_100Hz_data_t imu;
-  unsigned int scale = 1;
-  unsigned int rotScale = 1;
-  memset(&imu, 0, sizeof(imu_100Hz_data_t));
-  imu = *pImu; // Copy data as we will modify it
-//  imu.rotVectors1.real *= rotScale;
-//  imu.rotVectors1.i    *= rotScale;
-//  imu.rotVectors1.j    *= rotScale;
-//  imu.rotVectors1.k    *= rotScale;
-//  imu.rotVectors2.real *= rotScale;
-//  imu.rotVectors2.i    *= rotScale;
-//  imu.rotVectors2.j    *= rotScale;
-//  imu.rotVectors2.k    *= rotScale;
 
   // Decoding
   decode_quat_100hz(&imu, &imu);
@@ -1113,14 +1000,98 @@ int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *de
   tmp = (short) imu.rotVectors2.k;
   dest[14] = tmp >> 8 & 0xFF;
   dest[15] = tmp & 0xFF;
-
 //#if PRINTF_OPERATIONS_DBG
 //	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
 //												(unsigned int) HAL_GetTick(),
 //												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
 //  xQueueSend(pPrintQueue, string, 0);
 //#endif
+  return 16;
+}
 
+int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+  if (!dest || !pImu)
+  { /* Try the pointers */
+	return 0;
+  }
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+
+  // Decoding
+  decode_quat_50hz(&imu, &imu);
+
+  short tmp = 0; /* Temporary variable used for the type cast and shift */
+  tmp = (short) imu.rotVectors1.real;
+  dest[0] = tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.i;
+  dest[2] = tmp >> 8 & 0xFF;
+  dest[3] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.j;
+  dest[4] = tmp >> 8 & 0xFF;
+  dest[5] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.k;
+  dest[6] = tmp >> 8 & 0xFF;
+  dest[7] = tmp & 0xFF;
+#if PRINTF_OPERATIONS_DBG
+  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
+												(unsigned int) HAL_GetTick(),
+												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+  xQueueSend(pPrintQueue, string, 0);
+#endif
+  return 8;
+}
+
+int datatypeToRaw_imu_quat_9DOF_100Hz(imu_100Hz_data_t * pImu, unsigned char *dest)
+{
+  if (!dest || !pImu)
+  { /* Try the pointers */
+	return 0;
+  }
+  imu_100Hz_data_t imu;
+  unsigned int scale = 1;
+  unsigned int rotScale = 1;
+  memset(&imu, 0, sizeof(imu_100Hz_data_t));
+  imu = *pImu; // Copy data as we will modify it
+
+  // Decoding
+  decode_quat_100hz(&imu, &imu);
+
+  short tmp = 0; /* Temporary variable used for the type cast and shift */
+  tmp = (short) imu.rotVectors1.real;
+  dest[0] = tmp >> 8 & 0xFF;
+  dest[1] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.i;
+  dest[2] = tmp >> 8 & 0xFF;
+  dest[3] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.j;
+  dest[4] = tmp >> 8 & 0xFF;
+  dest[5] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors1.k;
+  dest[6] = tmp >> 8 & 0xFF;
+  dest[7] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.real;
+  dest[8] = tmp >> 8 & 0xFF;
+  dest[9] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.i;
+  dest[10] = tmp >> 8 & 0xFF;
+  dest[11] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.j;
+  dest[12] = tmp >> 8 & 0xFF;
+  dest[13] = tmp & 0xFF;
+  tmp = (short) imu.rotVectors2.k;
+  dest[14] = tmp >> 8 & 0xFF;
+  dest[15] = tmp & 0xFF;
+//#if PRINTF_OPERATIONS_DBG
+//	sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%0X %0X %0X %0X %0X %0X %0X %0X\n",
+//												(unsigned int) HAL_GetTick(),
+//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
   return 16;
 }
 
@@ -1135,18 +1106,15 @@ int datatypeToRaw_imu_gyro_acc_mag(imu_100Hz_data_t * pImu, unsigned char *dest)
   unsigned int rotScale = 1;
   memset(&imu, 0, sizeof(imu_100Hz_data_t));
   imu = *pImu; // Copy data as we will modify it
-//  imu.accelerometer1.x *= scale;
-//  imu.accelerometer1.y *= scale;
-//  imu.accelerometer1.z *= scale;
-//  imu.gyroscope1.x     *= scale;
-//  imu.gyroscope1.y     *= scale;
-//  imu.gyroscope1.z     *= scale;
-//  imu.magnetometer1.x  *= scale;
-//  imu.magnetometer1.y  *= scale;
-//  imu.magnetometer1.z  *= scale;
 
   // Decode data
   decode_raw_50hz(&imu, &imu);
+
+  /*
+  sprintf(string, "%u [operations] [Jona Test] Accel: %f %f %f\n Gyro: %f %f %f\n",
+		  imu.accelerometer1.x, imu.accelerometer1.y, imu.accelerometer1.z, imu.gyroscope1.x, imu.gyroscope1.y, imu.gyroscope1.z);
+  xQueueSend(pPrintQueue, string, 0);
+*/
 
   short tmp = 0; /* Temporary variable used for the typecast and shift */
 // in future, use the folowing union
@@ -1198,24 +1166,6 @@ return 0;
   //unsigned int rotScale = 1;
   memset(&imu, 0, sizeof(imu_100Hz_data_t));
   imu = *pImu; // Copy data as we will modify it
-//  imu.accelerometer1.x *= scale;
-//  imu.accelerometer1.y *= scale;
-//  imu.accelerometer1.z *= scale;
-//  imu.gyroscope1.x     *= scale;
-//  imu.gyroscope1.y     *= scale;
-//  imu.gyroscope1.z     *= scale;
-//  imu.magnetometer1.x  *= scale;
-//  imu.magnetometer1.y  *= scale;
-//  imu.magnetometer1.z  *= scale;
-//  imu.accelerometer2.x *= scale;
-//  imu.accelerometer2.y *= scale;
-//  imu.accelerometer2.z *= scale;
-//  imu.gyroscope2.x     *= scale;
-//  imu.gyroscope2.y     *= scale;
-//  imu.gyroscope2.z     *= scale;
-//  imu.magnetometer2.x  *= scale;
-//  imu.magnetometer2.y  *= scale;
-//  imu.magnetometer2.z  *= scale;
 
   // Decoding
   decode_raw_100hz(&imu, &imu);
@@ -2269,6 +2219,7 @@ int rawToStruct_imu_6axis(unsigned int * source, unsigned int size, unsigned int
 //
 //	return 1;
 //}
+
 
 static void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {

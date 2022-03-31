@@ -12,7 +12,7 @@
 #define BT_START_DELIMITER 0x02
 
 typedef struct {
-    unsigned char command;
+    unsigned char command1;
     unsigned int length;
     unsigned char DU[MAX_BT_PAYLOAD_LENGTH];
     unsigned char CS;
