@@ -98,7 +98,7 @@ void nRF52_init_rx_task(void)
   HAL_UART_Transmit(&huart7, (uint8_t *)string, strlen(string), 25);
 #endif
   memset(&nRF52RxMsg, 0, sizeof(nRF52_msg_t));
-  osThreadDef(nRF52ComManager, nRF52ComManagerThread, osPriorityNormal, 0, 1024);
+  osThreadDef(nRF52ComManager, nRF52ComManagerThread, osPriorityRealtime, 0, 1024);
   nRF52RxTaskHandle = osThreadCreate(osThread(nRF52ComManager), NULL);
 }
 
