@@ -2225,7 +2225,7 @@ static void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {
     out->rotVectors1.real = ((float)in->rotVectors1.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors1.i = ((float)in->rotVectors1.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
-    out->rotVectors1.j = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.j = ((float)in->rotVectors1.j / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors1.k = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
 }
 
@@ -2233,12 +2233,12 @@ static void decode_quat_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {
     out->rotVectors1.real = ((float)in->rotVectors1.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors1.i = ((float)in->rotVectors1.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
-    out->rotVectors1.j = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors1.j = ((float)in->rotVectors1.j / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors1.k = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
 
     out->rotVectors2.real = ((float)in->rotVectors2.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors2.i = ((float)in->rotVectors2.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
-    out->rotVectors2.j = ((float)in->rotVectors2.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
+    out->rotVectors2.j = ((float)in->rotVectors2.j / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors2.k = ((float)in->rotVectors2.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
 }
 
