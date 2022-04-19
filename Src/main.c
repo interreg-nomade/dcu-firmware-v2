@@ -107,14 +107,14 @@ static osThreadId pPrintTaskHandle;
 
 float PI = 3.14159265358979323846;
 
-imu_module imu_1 = {1, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 1", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_2 = {2, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 2", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_3 = {3, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 3", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_4 = {4, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 4", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_5 = {5, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 5", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_6 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 6", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_7 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 7", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-imu_module imu_8 = {6, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 8", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_1 = {1, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 1", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_2 = {2, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 2", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_3 = {3, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 3", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_4 = {4, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 4", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_5 = {5, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 5", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_6 = {6, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 6", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_7 = {7, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 7", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+imu_module imu_8 = {8, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 8", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 imu_module *imu_array [] = {&imu_1, &imu_2, &imu_3, &imu_4, &imu_5, &imu_6, &imu_7, &imu_8};
 

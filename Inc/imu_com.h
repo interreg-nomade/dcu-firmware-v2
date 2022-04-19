@@ -33,6 +33,7 @@
 /* IMU module status variables -----------------------------------------------*/
 typedef struct __imu_module{
 	volatile uint8_t   number;
+	volatile uint8_t   connectingSequence;  // added 07/04/2022 to link the received data from nRF52 with the right sequence in the raw file
 	volatile uint8_t   instrument;
 	UART_HandleTypeDef *uart;
 	uint8_t            mac_address [6];     // as defined in the RAW file

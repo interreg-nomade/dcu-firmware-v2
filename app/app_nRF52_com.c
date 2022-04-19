@@ -60,6 +60,7 @@ imu_module *imunRF52 = NULL;
 uint8_t previous_connected_modules [6];
 
 char command;
+uint8_t moduleConnectingSequence = 1;
 
 void nRF52ComManagerThread(const void *params);
 
@@ -143,6 +144,36 @@ void nRF52ComManagerThread(const void *params)
     	  int value = 0;
     	  uint16_t start_pos = 5;
 //!    	  sensorEvent.module = nRF52RxMsg.DU[3];
+
+    	  // to find out which module we need to use: the module nr of the nRF52 data package is defined per sequence of connecting to the network,
+    	  // rather then to the sequence as defined in the raw file. This connecting sequence is stored as well in the imu_module table
+    	  // (in variable imu_module->connectingSequence).
+    	  // The sensor nr defined in nRF52RxMsg.DU[3] is the connecting sequence nr, so if we search this in the table, then we have the right
+    	  // sensor nr...
+
+    	  int sensorNr = 0;
+    	  int moduleFound = 0;
+		  for (int k = 0; k < numberOfModules; k++)
+		  {
+			if (!moduleFound)
+			{
+			  if (imu_array[k]->connectingSequence == (nRF52RxMsg.DU[3]+1))
+			  {
+				sensorNr = imu_array[k]->number;
+				moduleFound++;
+			  }
+			}
+		  }
+		  if (!moduleFound)
+		  {
+#if PRINTF_nRF52_COMMANAGER
+            sprintf(string, "[app_nRF52_com] Connecting sequence %u not found in imu_array.\n", (unsigned int) nRF52RxMsg.DU[3]+1);
+            xQueueSend(pPrintQueue, string, 0);
+#endif
+		  }
+//    	  sensorNr = nRF52RxMsg.DU[3]+1;
+
+
     	  switch (nRF52RxMsg.DU[4]) // Data Type of nRF52 received message: Quaternions = 1, Euler = 2, RAW = 3
     	  {
   	        case 0x01:
@@ -278,7 +309,8 @@ void nRF52ComManagerThread(const void *params)
   	          break;
   	        }
     	  }
-    	  switch(imu_array[nRF52RxMsg.DU[3]]->sampleFrequency) // nRF52RxMsg.DU[3] is the module nr
+    	  //switch(imu_array[nRF52RxMsg.DU[3]]->sampleFrequency) // nRF52RxMsg.DU[3] is the module nr // changed 20220407
+    	  switch(imu_array[sensorNr]->sampleFrequency)
     	  {
     	    case 10:  value = 5;  break;
     	    case 25:  value = 2;  break;
@@ -295,9 +327,10 @@ void nRF52ComManagerThread(const void *params)
     		// case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
     		// case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
     		// case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
-        	switch(nRF52RxMsg.DU[3]) // sensor nr
+        	//switch(nRF52RxMsg.DU[3]) // sensor nr // changed 20220407
+          	switch(sensorNr)
         	{
-        	  case 0x00:
+        	  case 0x01:
         	  {
                 if (flag100HzModule1)
                 {
@@ -338,7 +371,7 @@ void nRF52ComManagerThread(const void *params)
                 }
         	    break;
         	  }
-        	  case 0x01:
+        	  case 0x02:
         	  {
                 if (flag100HzModule2)
                 {
@@ -353,7 +386,7 @@ void nRF52ComManagerThread(const void *params)
                 }
         	    break;
         	  }
-        	  case 0x02:
+        	  case 0x03:
         	  {
                 if (flag100HzModule3)
                 {
@@ -368,7 +401,7 @@ void nRF52ComManagerThread(const void *params)
                 }
         	   	break;
           	  }
-        	  case 0x03:
+        	  case 0x04:
         	  {
                 if (flag100HzModule4)
                 {
@@ -383,7 +416,7 @@ void nRF52ComManagerThread(const void *params)
                 }
         	    break;
         	  }
-        	  case 0x04:
+        	  case 0x05:
         	  {
                 if (flag100HzModule5)
                 {
@@ -398,7 +431,7 @@ void nRF52ComManagerThread(const void *params)
                 }
         	    break;
         	  }
-        	  case 0x05:
+        	  case 0x06:
         	  {
                 if (flag100HzModule6)
                 {
@@ -439,34 +472,35 @@ void nRF52ComManagerThread(const void *params)
 	    	BLEmoduleDataToSensorEvent1(data, &sensorEvent);
         	for (uint8_t f = 0; f < value; f++)
             { // repeat same data, depending on selected sampling frequency
-        	  switch (nRF52RxMsg.DU[3]) // sensor nr
+        	  //switch (nRF52RxMsg.DU[3]) // sensor nr // changed 20220407
+        	  switch (sensorNr)
         	  {
-        	    case 0x00:
+        	    case 0x01:
         	    {
         	      sensorHandlerBLEmodule1(&sensorEvent);
         	      break;
         	    }
-        	    case 0x01:
+        	    case 0x02:
         	    {
         	      sensorHandlerBLEmodule2(&sensorEvent);
         	      break;
         	    }
-        	    case 0x02:
+        	    case 0x03:
         	    {
         	   	  sensorHandlerBLEmodule3(&sensorEvent);
         	   	  break;
         	   	}
-        	   	case 0x03:
+        	   	case 0x04:
         	   	{
         	      sensorHandlerBLEmodule4(&sensorEvent);
         	      break;
         	    }
-        	    case 0x04:
+        	    case 0x05:
         	   	{
         	      sensorHandlerBLEmodule5(&sensorEvent);
         	      break;
         	    }
-        	    case 0x05:
+        	    case 0x06:
         	    {
         	      sensorHandlerBLEmodule6(&sensorEvent);
         	      break;
@@ -945,22 +979,28 @@ void nRF52ComManagerThread(const void *params)
 //              xQueueSend(pPrintQueue, string, 0);
 			    for (int k = 0; k < numberOfModules; k++)
 				{
-				   timesFound = 0;
-				   for (int j = 0; j < 6; j++)
-				   {
-					  if (imu_array[k]->mac_address[j] == lookupMacAddress[5-j])
-					  {
-						 timesFound++;
-					  }
-				   }
-				   if (timesFound == 0x06)
-				   {
+				  timesFound = 0;
+				  for (int j = 0; j < 6; j++)
+				  {
+					if (imu_array[k]->mac_address[j] == lookupMacAddress[5-j])
+					{
+					  timesFound++;
+					}
+				  }
+				  if (timesFound == 0x06)
+				  {
+					if (!imu_array[k]->connected)
+					{
 					  imu_array[k]->connected = 1;
+					  imu_array[k]->connectingSequence = moduleConnectingSequence;
+					  moduleConnectingSequence++;
 #if PRINTF_nRF52_COMMANAGER
-					  sprintf(string, "%u [app_nRF52_com] [nRF52ComManagerThread] Sensor connect status received for module %02X.\n",(unsigned int) HAL_GetTick(),k+1);
+					  sprintf(string, "%u [app_nRF52_com] [nRF52ComManagerThread] Sensor connect status received for module %02X, with connecting sequence %02X.\n",(unsigned int) HAL_GetTick(),imu_array[k]->number, imu_array[k]->connectingSequence);
 					  xQueueSend(pPrintQueue, string, 0);
+
 #endif
-				   }
+					}
+			      }
 				}
              }
 			 else

@@ -461,16 +461,16 @@ void module_status_overview(void)
 {
   // print imu_array:
   char DUString[3];
-  xQueueSend(pPrintQueue, "    Module   | Instr |  Mac_address | Connected | Sample f | SR given | Cal | meas | bat (V) | sync time |                   output data type", 0);
+  xQueueSend(pPrintQueue, "    Module   | Instr | ConSq |  Mac_address | Connected | Sample f | SR given | Cal | meas | bat (V) | sync time |                   output data type", 0);
   xQueueSend(pPrintQueue, "                   | ODT given\n", 0);
-  xQueueSend(pPrintQueue, "-------------+-------+--------------+-----------+----------+----------+-----+------+---------+-----------+-----------------------------------", 0);
+  xQueueSend(pPrintQueue, "-------------+-------+-------+--------------+-----------+----------+----------+-----+------+---------+-----------+-----------------------------------", 0);
   xQueueSend(pPrintQueue, "-------------------+----------\n", 0);
   // example:              BLE module 1 | C6.D8.42.14.35.E8 |     no    |    50Hz  |     no   |  no |  no  |    ?    |    ?      | IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz |     no
   for (int i = 0; i < 8; i++)
   {
 	if (imu_array[i]->macAddressAvailable)
 	{
-	  sprintf(string, "%s |   %02X  | ", imu_array[i]->name, imu_array[i]->instrument);
+	  sprintf(string, "%s |   %02X  |   %02X  | ", imu_array[i]->name, imu_array[i]->instrument, imu_array[i]->connectingSequence);
       for (int j = 5; j >= 0; j--)
       {
         if (strlen(string) < 147)

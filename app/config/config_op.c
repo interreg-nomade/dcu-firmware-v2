@@ -26,7 +26,7 @@
 
 #define assert( x ) if( ( x ) == 0 ) {return 0;}
 
-#define CONFIG_LINK_PRINT_INFOS 		0//1
+#define CONFIG_LINK_PRINT_INFOS 		1
 #define CONFIG_DATA_ALLOC_PRINT_INFOS 	0//1
 #define CONFIG_OP_DBG_PRINT 			0//1
 
@@ -98,73 +98,73 @@ int config_linkParsingFunctions(decoded_config_t * pConf)
 //		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUATBAT:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUATBAT, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUATBAT, assigning parsing function.\n", 0);
+//#endif
 		  //pConf->instruments[i].parseBinary = datatypeToRaw_imu_quatBat;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_GYRO_ACC, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_GYRO_ACC, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_gyro_acc;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_GYRO_ACC_100HZ, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_GYRO_ACC_100HZ, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_gyro_acc_100Hz;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_100HZ, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_100HZ, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_100Hz;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_9DOF, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_9DOF, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_9DOF;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_9DOF_100HZ, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMUQUAT_QUAT_9DOF_100HZ, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_quat_9DOF_100Hz;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMU_GYRO_ACC_MAG, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMU_GYRO_ACC_MAG, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_gyro_acc_mag;
 		  break;
 		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMU_GYRO_ACC_MAG_100HZ, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//		  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter IMU_GYRO_ACC_MAG_100HZ, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_imu_gyro_acc_mag_100Hz;
 		  break;
 		}
@@ -244,9 +244,9 @@ int config_linkParsingFunctions(decoded_config_t * pConf)
 //		}
 		case SETUP_PRM_DATA_OUTPUT_DATATYPE_RTC:
 		{
-#if CONFIG_LINK_PRINT_INFOS
-			  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter RTC, assigning parsing function.\n", 0);
-#endif
+//#if CONFIG_LINK_PRINT_INFOS
+//			  xQueueSend(pPrintQueue, "[config_op] [config_linkParsingFunctions] Found parameter RTC, assigning parsing function.\n", 0);
+//#endif
 		  pConf->instruments[i].parseBinary = datatypeToRaw_RTC;
 		  break;
 		}
@@ -954,10 +954,10 @@ int getNumberOfInstrumentSpecificFromConfig(decoded_config_t * conf, int type)
   return j;
 }
 
-int getInstrumentFromConfig(decoded_config_t * conf, instrument_config_t ** pResInst, int type)
+int getInstrumentFromConfig(decoded_config_t * conf, instrument_config_t ** pResInst, int type, uint16_t instNr)
 {
   if (!conf)
-  {
+  { //decodedConfig.conf = null
 	return -1;
   }
   unsigned int j = 0;
@@ -969,22 +969,35 @@ int getInstrumentFromConfig(decoded_config_t * conf, instrument_config_t ** pRes
 	{
 	  if (pInst->comMethod == type && !pInst->pollRank)
 	  {
-		if (!j)
+		//if (j == instNr)
+	    if (!j)
 		{
-		  *pResInst = pInst;
-		  pInst->pollRank = 1; // to make sure that the same instrument will not be assigned
+//		  if (!pInst->pollRank)
+//		  {
+		    *pResInst = pInst;
+		    pInst->pollRank = 1; // to make sure that the same instrument will not be assigned again
 #if CONFIG_LINK_PRINT_INFOS
-		  sprintf(string, "%u [config_op] [getInstrumentFromConfig] Instrument %d assigned for communication method: 0x%0X at address %p.\n",
-		    (unsigned int) HAL_GetTick(), i, (unsigned int) conf->instruments[i].comMethod, (void*) &conf->instruments[i]);
-		  xQueueSend(pPrintQueue, string, 0);
+		    sprintf(string, "[config_op] [getInstrumentFromConfig] Instrument %d assigned for communication method: 0x%0X at address %p.\n",
+		      conf->instruments[i].instrumentID, (unsigned int) conf->instruments[i].comMethod, (void*) &conf->instruments[i]);
+		    xQueueSend(pPrintQueue, string, 0);
 #endif
+//		  }
+//		  else
+//		  {
+//#if CONFIG_LINK_PRINT_INFOS
+//		    sprintf(string, "[config_op] [getInstrumentFromConfig] Error: instrument %d is already assigned for communication method: 0x%0X at address %p.\n",
+//		      instNr, (unsigned int) conf->instruments[instNr].comMethod, (void*) &conf->instruments[instNr]);
+//		    xQueueSend(pPrintQueue, string, 0);
+//#endif
+//
+//		  }
 		}
 		j++;
 	  }
 	}
 	else
-	{
-	  //pInst = null
+	{ //pInst = null
+//	  return -2;
 	}
 	pInst++;
   }

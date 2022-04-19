@@ -758,7 +758,7 @@ void IMU_Config_Init()
 //		n =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument, SETUP_PRM_COMM_METHOD_IMU);
 //!	    for (uint8_t i = 0; i < n; i++ )
 //!	    {
-			n =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument, SETUP_PRM_COMM_METHOD_BT);
+			n =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument, SETUP_PRM_COMM_METHOD_BT, 0);
 //!			m =  getInstrumentFromConfig(&decodedConfig.conf, &pImuInstrument[i], SETUP_PRM_COMM_METHOD_BT, imu_array[i]->instrument);
 //!	    }
 

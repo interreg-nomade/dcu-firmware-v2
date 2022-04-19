@@ -192,7 +192,7 @@ void RTC_Config_Init()
   int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_RTC);
   if (n==1)
   { /* Retrieved one RTC instrument */
-	n = getInstrumentFromConfig(&decodedConfig.conf, &RtcInstrumentHandler, SETUP_PRM_COMM_METHOD_RTC);
+	n = getInstrumentFromConfig(&decodedConfig.conf, &RtcInstrumentHandler, SETUP_PRM_COMM_METHOD_RTC, 0);
 	if (n == 1)
 	{ /* Correctly retrieved instrument pointer */
 	  pEpoch64 = (uint64_t*) RtcInstrumentHandler->data;

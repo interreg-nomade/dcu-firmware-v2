@@ -37,7 +37,7 @@ void USBAD_Config_Init(void)
 	if (n==1)
 	{
 		/* Retrieved one usb ad instrument */
-		n = getInstrumentFromConfig(&decodedConfig.conf, &pUsbAdInstrument, SETUP_PRM_COMM_METHOD_USBAD);
+		n = getInstrumentFromConfig(&decodedConfig.conf, &pUsbAdInstrument, SETUP_PRM_COMM_METHOD_USBAD, 0);
 		/* Initialize the notification queue */
 		notification_service_queue_init(10, sizeof(usbad_data_t));
 

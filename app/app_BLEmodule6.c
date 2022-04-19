@@ -67,15 +67,21 @@ static void BLE6Task(const void * params)
 
 static void BLEmodule6_init(void)
 {
-  BLEmodule6_Config_Init(); // decode configuration and link pointer handler to BLE module 6
-  wakeBLEmodule6Task = xSemaphoreCreateBinary(); // Creating binary semaphore
-  BLEmodule6eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE, sizeof(imu_100Hz_data_t)); // Create queue to store data from BLE instrument
+  if (BLEmodule6_Config_Init())
+  { // configuration is decoded and pointer handler is linked to BLE module 6
+    wakeBLEmodule6Task = xSemaphoreCreateBinary(); // Creating binary semaphore
+    BLEmodule6eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE, sizeof(imu_100Hz_data_t)); // Create queue to store data from BLE instrument
 #if PRINTF_APP_BLEMODULE6_DBG
-  if (BLEmodule6eventQueue == NULL)
-  {
-	xQueueSend(pPrintQueue, "[APP_BLEmodule6] [BLEmodule6_init] Error creating BLE module 6 event queue.\n", 0);
-  }
+    if (BLEmodule6eventQueue == NULL)
+    {
+	  xQueueSend(pPrintQueue, "[APP_BLEmodule6] [BLEmodule6_init] Error creating BLE module 6 event queue.\n", 0);
+    }
 #endif
+  }
+  else
+  {
+    xQueueSend(pPrintQueue, "[APP_BLEmodule6] [BLEmodule6_init] BLE module 6 event queue not created.\n", 0);
+  }
 }
 
 void sensorHandlerBLEmodule6(imu_100Hz_data_t *sensorEvent)
@@ -94,7 +100,7 @@ int BLEmodule6_Config_Init()
 //    sprintf(string, "[APP_BLEmodule6] [BLEmodule6_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
 //    xQueueSend(pPrintQueue, string, 0);
 //#endif
-	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule6Instrument, SETUP_PRM_COMM_METHOD_BT);
+	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule6Instrument, SETUP_PRM_COMM_METHOD_BT, 5);
   }
   else
   {

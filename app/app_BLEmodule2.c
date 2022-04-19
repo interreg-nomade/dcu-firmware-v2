@@ -67,15 +67,21 @@ static void BLE2Task(const void * params)
 
 static void BLEmodule2_init(void)
 {
-  BLEmodule2_Config_Init(); // decode configuration and link pointer handler to BLE module 2
-  wakeBLEmodule2Task = xSemaphoreCreateBinary(); // Creating binary semaphore
-  BLEmodule2eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE, sizeof(imu_100Hz_data_t)); // Create queue to store data from BLE instrument
+  if (BLEmodule2_Config_Init())
+  { // configuration is decoded and pointer handler is linked to BLE module 2
+    wakeBLEmodule2Task = xSemaphoreCreateBinary(); // Creating binary semaphore
+    BLEmodule2eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE, sizeof(imu_100Hz_data_t)); // Create queue to store data from BLE instrument
 #if PRINTF_APP_BLEMODULE2_DBG
-  if (BLEmodule2eventQueue == NULL)
-  {
-	xQueueSend(pPrintQueue, "[APP_BLEmodule2] [BLEmodule2_init] Error creating BLE module 2 event queue.\n", 0);
-  }
+    if (BLEmodule2eventQueue == NULL)
+    {
+	  xQueueSend(pPrintQueue, "[APP_BLEmodule2] [BLEmodule2_init] Error creating BLE module 2 event queue.\n", 0);
+    }
 #endif
+  }
+  else
+  {
+    xQueueSend(pPrintQueue, "[APP_BLEmodule2] [BLEmodule2_init] BLE module 2 event queue not created.\n", 0);
+  }
 }
 
 void sensorHandlerBLEmodule2(imu_100Hz_data_t *sensorEvent)
@@ -94,7 +100,7 @@ int BLEmodule2_Config_Init()
 //    sprintf(string, "[APP_BLEmodule2] [BLEmodule2_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
 //    xQueueSend(pPrintQueue, string, 0);
 //#endif
-	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule2Instrument, SETUP_PRM_COMM_METHOD_BT);
+	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule2Instrument, SETUP_PRM_COMM_METHOD_BT, 1);
   }
   else
   {

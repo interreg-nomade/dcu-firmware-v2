@@ -259,7 +259,7 @@ void initThread(const void * params)
         {
 
 #if PRINTF_APP_INIT
-      sprintf(string, "%u [app_init] [initThread] Send mac addresses.\n",(unsigned int) HAL_GetTick());
+      sprintf(string, "%u [app_init] [initThread] Send MAC addresses.\n",(unsigned int) HAL_GetTick());
       xQueueSend(pPrintQueue, string, 0);
 #endif
 

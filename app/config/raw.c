@@ -17,7 +17,7 @@
 #include "app_terminal_com.h" // to be able to print module overview data with module_status_overview()
 
 
-#define RAW_DBG_PRINTF 0//1
+#define RAW_DBG_PRINTF 1
 #define RAW_CONFIGURATION_TEST 0
 
 extern imu_module imu_1;
@@ -64,14 +64,14 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 	config->companyID = buffer[++count];
 	config->companyID = config->companyID << 8;
 	config->companyID = config->companyID | buffer[++count];
-#if RAW_DBG_PRINTF
-	sprintf(string, "[RAW] [decode_config] ------------------------- SETUP ID: %d\r\n", config->setupID);
-	xQueueSend(pPrintQueue, string, 0);
-	sprintf(string, "[RAW] [decode_config] -------------------------- VERSION: %d\r\n", config->version);
-	xQueueSend(pPrintQueue, string, 0);
-	sprintf(string, "[RAW] [decode_config] ----------------------- COMPANY ID: %d\r\n", config->companyID);
-	xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//	sprintf(string, "[RAW] [decode_config] ------------------------- SETUP ID: %d\r\n", config->setupID);
+//	xQueueSend(pPrintQueue, string, 0);
+//	sprintf(string, "[RAW] [decode_config] -------------------------- VERSION: %d\r\n", config->version);
+//	xQueueSend(pPrintQueue, string, 0);
+//	sprintf(string, "[RAW] [decode_config] ----------------------- COMPANY ID: %d\r\n", config->companyID);
+//	xQueueSend(pPrintQueue, string, 0);
+//#endif
 	if(buffer[++count] == STX)
 	{ /* Start of text found */
 	  config->numberOfInstruments = buffer[++count];
@@ -97,12 +97,12 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 		config->instruments[i].numberOfParameters	= config->instruments[i].numberOfParameters << 8;
 		config->instruments[i].numberOfParameters	= config->instruments[i].numberOfParameters | buffer[++count];
 #if RAW_DBG_PRINTF
-		sprintf(string, "[RAW] [decode_config] -------------------- Instrument n°: %d\r\n", i);
-		xQueueSend(pPrintQueue, string, 0);
+//		sprintf(string, "[RAW] [decode_config] -------------------- Instrument n°: %d\r\n", i);
+//		xQueueSend(pPrintQueue, string, 0);
 		sprintf(string, "[RAW] [decode_config] -------------------- Instrument ID: %d\r\n", config->instruments[i].instrumentID);
 		xQueueSend(pPrintQueue, string, 0);
-		sprintf(string, "[RAW] [decode_config] ------------- Number of parameters: %d\r\n", config->instruments[i].numberOfParameters);
-		xQueueSend(pPrintQueue, string, 0);
+//		sprintf(string, "[RAW] [decode_config] ------------- Number of parameters: %d\r\n", config->instruments[i].numberOfParameters);
+//		xQueueSend(pPrintQueue, string, 0);
 #endif
 		for(uint16_t j = 0; j < config->instruments[i].numberOfParameters; j++)
 		{
@@ -121,10 +121,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].x = config->instruments[i].x << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ----- HMI information - Position x: %08X = %4.0f.\r\n", config->instruments[i].x,*((float*)&config->instruments[i].x));
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ----- HMI information - Position x: %08X = %4.0f.\r\n", config->instruments[i].x,*((float*)&config->instruments[i].x));
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_Y :
@@ -137,10 +137,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].y = config->instruments[i].y << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ----- HMI information - Position y: %08X = %4.0f.\r\n", config->instruments[i].y,*((float*)&config->instruments[i].y));
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ----- HMI information - Position y: %08X = %4.0f.\r\n", config->instruments[i].y,*((float*)&config->instruments[i].y));
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_R :
@@ -153,10 +153,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].r = config->instruments[i].r << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ------- HMI information - Rotation: %08X\r\n", config->instruments[i].r);
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ------- HMI information - Rotation: %08X\r\n", config->instruments[i].r);
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_COMM_METHOD:
@@ -170,7 +170,9 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			  }
 			}
 #if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ---------- Communication Interface: %08X = ", config->instruments[i].comMethod);
+//			sprintf(string, "[RAW] [decode_config] ---------- Communication Interface: %08X = ", (unsigned int) config->instruments[i].comMethod);
+// if comm method is not printed, extra line feed...
+			sprintf(string, "[RAW] [decode_config] ---------- Communication Interface: %08X.\r\n", (unsigned int) config->instruments[i].comMethod);
 			xQueueSend(pPrintQueue, string, 0);
 #endif
 			switch(config->instruments[i].comMethod)
@@ -181,9 +183,9 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
            	    { // if more than 8 BT instruments are defined in the RAW file, channel 8 will be overwritten.
                	  availableBTchannel++;
            	    }
-#if RAW_DBG_PRINTF
-                xQueueSend(pPrintQueue, "Bluetooth.\r\n", 0);
-#endif
+//#if RAW_DBG_PRINTF
+//                xQueueSend(pPrintQueue, "Bluetooth.\r\n", 0);
+//#endif
                 break;
               }
 //              case SETUP_PRM_COMM_METHOD_UART:
@@ -233,9 +235,9 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 //              }
               case SETUP_PRM_COMM_METHOD_RTC:
               {
-#if RAW_DBG_PRINTF
-      		    xQueueSend(pPrintQueue, "Real Time Clock (RTC).\r\n", 0);
-#endif
+//#if RAW_DBG_PRINTF
+//      		    xQueueSend(pPrintQueue, "Real Time Clock (RTC).\r\n", 0);
+//#endif
                 break;
               }
       		  default:
@@ -261,10 +263,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].comMethodVersion = config->instruments[i].comMethodVersion << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] -- Communication Interface Version: %08X = Version %2.2f.\r\n", config->instruments[i].comMethodVersion,*((float*)&config->instruments[i].comMethodVersion));
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] -- Communication Interface Version: %08X = Version %2.2f.\r\n", config->instruments[i].comMethodVersion,*((float*)&config->instruments[i].comMethodVersion));
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_COMM_FAIL_CONSEQUENCE:
@@ -277,41 +279,41 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].comFail = config->instruments[i].comFail << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] --- Communication Fail Consequence: %08X = ", config->instruments[i].comFail);
-			xQueueSend(pPrintQueue, string, 0);
-            switch(config->instruments[i].comFail)
-            {
-              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_DO_NOTHING:
-              {
-      		    xQueueSend(pPrintQueue, "Do nothing.\r\n", 0);
-                break;
-              }
-              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_STOP_SOFTWARE_INSTRUMENTS:
-              {
-      		    xQueueSend(pPrintQueue, "Stop software instruments.\r\n", 0);
-                break;
-              }
-              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_STOP_VISUALISATION:
-              {
-      		    xQueueSend(pPrintQueue, "Stop visualisation.\r\n", 0);
-                break;
-              }
-              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_STOP_MEASUREMENTS:
-              {
-      		    xQueueSend(pPrintQueue, "Stop measurements.\r\n", 0);
-                break;
-              }
-              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_POWER_CUT_OFF:
-              {
-      		    xQueueSend(pPrintQueue, "Power cut off (if allowed by Ethical Commission).\r\n", 0);
-              }
-      		  default:
-      		  {
-      		    xQueueSend(pPrintQueue, "Unknown communication fail consequence value.\r\n", 0);
-       		  }
-            }
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] --- Communication Fail Consequence: %08X = ", config->instruments[i].comFail);
+//			xQueueSend(pPrintQueue, string, 0);
+//            switch(config->instruments[i].comFail)
+//            {
+//              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_DO_NOTHING:
+//              {
+//      		    xQueueSend(pPrintQueue, "Do nothing.\r\n", 0);
+//                break;
+//              }
+//              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_STOP_SOFTWARE_INSTRUMENTS:
+//              {
+//      		    xQueueSend(pPrintQueue, "Stop software instruments.\r\n", 0);
+//                break;
+//              }
+//              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_STOP_VISUALISATION:
+//              {
+//      		    xQueueSend(pPrintQueue, "Stop visualisation.\r\n", 0);
+//                break;
+//              }
+//              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_STOP_MEASUREMENTS:
+//              {
+//      		    xQueueSend(pPrintQueue, "Stop measurements.\r\n", 0);
+//                break;
+//              }
+//              case SETUP_PRM_COMM_FAIL_CONSEQUENCE_POWER_CUT_OFF:
+//              {
+//      		    xQueueSend(pPrintQueue, "Power cut off (if allowed by Ethical Commission).\r\n", 0);
+//              }
+//      		  default:
+//      		  {
+//      		    xQueueSend(pPrintQueue, "Unknown communication fail consequence value.\r\n", 0);
+//       		  }
+//            }
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_DATA_INPUT_DATATYPE:
@@ -324,10 +326,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].dataTypeInput = config->instruments[i].dataTypeInput << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ------------------ Data Type input: %08X\r\n", config->instruments[i].dataTypeInput);
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ------------------ Data Type input: %08X\r\n", config->instruments[i].dataTypeInput);
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_DATA_OUTPUT_DATATYPE:
@@ -345,79 +347,79 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			  imu_array[availableBTchannel-1]->outputDataType = config->instruments[i].dataTypeOutput;
 			  imu_array[availableBTchannel-1]->instrument = i;
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ----------------- Data Type output: %08X = ", config->instruments[i].dataTypeOutput);
-			xQueueSend(pPrintQueue, string, 0);
-            switch(config->instruments[i].dataTypeOutput)
-            {
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_NONE:
-              {
-      		    xQueueSend(pPrintQueue, "None.\r\n", 0);
-                break;
-              }
-//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMU9AXISROTVEC:
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ----------------- Data Type output: %08X = ", config->instruments[i].dataTypeOutput);
+//			xQueueSend(pPrintQueue, string, 0);
+//            switch(config->instruments[i].dataTypeOutput)
+//            {
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_NONE:
 //              {
-//      		    xQueueSend(pPrintQueue, "IMU_9AXIS_ROT_VECTOR.\r\n", 0);
+//      		    xQueueSend(pPrintQueue, "None.\r\n", 0);
 //                break;
 //              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUATBAT:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions + Battery voltage level.\r\n", 0);
-                break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions only.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions + Gyroscope + Accelerometer.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions + Gyroscope + Accelerometer @ 100Hz.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions (Quaternions only) @ 100Hz.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions 9DOF (Quaternions only).\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Quaternions 9DOF (Quaternions only) @ 100Hz.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Gyroscope + Accelerometer + Magnetometer.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
-              {
-      		    xQueueSend(pPrintQueue, "IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz.\r\n", 0);
-      		    break;
-              }
-              case SETUP_PRM_DATA_OUTPUT_DATATYPE_RTC:
-              {
-      		    xQueueSend(pPrintQueue, "RTC.\r\n", 0);
-      		    break;
-              }
-      		  default:
-      		  {
-      		    xQueueSend(pPrintQueue, "Unknown Data Type Output value.\r\n", 0);
-       		  }
-            }
-//			  sprintf(string, "[RAW] [decode_config] count value =  %0X\n", count);
-//			  xQueueSend(pPrintQueue, string, 0);
-#endif
+////              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMU9AXISROTVEC:
+////              {
+////      		    xQueueSend(pPrintQueue, "IMU_9AXIS_ROT_VECTOR.\r\n", 0);
+////                break;
+////              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUATBAT:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions + Battery voltage level.\r\n", 0);
+//                break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions only.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions + Gyroscope + Accelerometer.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_GYRO_ACC_100HZ:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions + Gyroscope + Accelerometer @ 100Hz.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_100HZ:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions (Quaternions only) @ 100Hz.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions 9DOF (Quaternions only).\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUQUAT_9DOF_100HZ:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Quaternions 9DOF (Quaternions only) @ 100Hz.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Gyroscope + Accelerometer + Magnetometer.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_IMUGYRO_ACC_MAG_100HZ:
+//              {
+//      		    xQueueSend(pPrintQueue, "IMU Gyroscope + Accelerometer + Magnetometer @ 100Hz.\r\n", 0);
+//      		    break;
+//              }
+//              case SETUP_PRM_DATA_OUTPUT_DATATYPE_RTC:
+//              {
+//      		    xQueueSend(pPrintQueue, "RTC.\r\n", 0);
+//      		    break;
+//              }
+//      		  default:
+//      		  {
+//      		    xQueueSend(pPrintQueue, "Unknown Data Type Output value.\r\n", 0);
+//       		  }
+//            }
+////			  sprintf(string, "[RAW] [decode_config] count value =  %0X\n", count);
+////			  xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_DATA_INPUT_BYTES:
@@ -430,10 +432,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].dataInput = config->instruments[i].dataInput << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ------- Input Data Length in Bytes: %08X\r\n", config->instruments[i].dataInput);
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ------- Input Data Length in Bytes: %08X\r\n", config->instruments[i].dataInput);
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_DATA_OUTPUT_BYTES:
@@ -446,10 +448,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 				config->instruments[i].dataOutput = config->instruments[i].dataOutput << 8;
 			  }
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ------ Output Data Length in Bytes: %08X\r\n", config->instruments[i].dataOutput);
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ------ Output Data Length in Bytes: %08X\r\n", config->instruments[i].dataOutput);
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_COMM_ADDR:
@@ -464,10 +466,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			u.bytes[1] = buffer[++count];
 			u.bytes[0] = buffer[++count];
 			config->instruments[i].comAddress = (unsigned int) u.f;
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ------------ Communication Address: %08X\r\n", config->instruments[i].comAddress);
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ------------ Communication Address: %08X\r\n", config->instruments[i].comAddress);
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 		  case SETUP_PRM_SAMPLERATE:
@@ -494,10 +496,10 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			{
 			  imu_array[availableBTchannel-1]->sampleFrequency = *((float*)&config->instruments[i].sampleRate);
 			}
-#if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ---------------------- Sample Rate: %08X = %3.0fHz.\r\n", config->instruments[i].sampleRate,*((float*)&config->instruments[i].sampleRate));
-			xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if RAW_DBG_PRINTF
+//			sprintf(string, "[RAW] [decode_config] ---------------------- Sample Rate: %08X = %3.0fHz.\r\n", config->instruments[i].sampleRate,*((float*)&config->instruments[i].sampleRate));
+//			xQueueSend(pPrintQueue, string, 0);
+//#endif
 			break;
 		  }
 //		  case SETUP_PRM_SOFTWARE_FUNCTION:
@@ -801,7 +803,7 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			  }
 			}
 #if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] ------- Bluetooth MAC address High: %08X\r\n", config->instruments[i].BTMACHigh);
+			sprintf(string, "[RAW] [decode_config] ------- Bluetooth MAC address High: %08X\r\n", (unsigned int) config->instruments[i].BTMACHigh);
 			xQueueSend(pPrintQueue, string, 0);
 #endif
 			break;
@@ -824,7 +826,7 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 			  }
 			}
 #if RAW_DBG_PRINTF
-			sprintf(string, "[RAW] [decode_config] -------- Bluetooth MAC address Low: %08X\r\n", config->instruments[i].BTMACLow);
+			sprintf(string, "[RAW] [decode_config] -------- Bluetooth MAC address Low: %08X\r\n", (unsigned int) config->instruments[i].BTMACLow);
 			xQueueSend(pPrintQueue, string, 0);
 #endif
 			if (config->instruments[i].comMethod == SETUP_PRM_COMM_METHOD_BT)
