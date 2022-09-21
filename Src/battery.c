@@ -114,6 +114,8 @@ void measBatt_Init()
 	HAL_ADC_MspInit(&hadc3);
 
 	MX_ADC3_Init();
+
+	HAL_ADCEx_Calibration_Start(&hadc3, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED);
 }
 
 void measBatt(float *value)
@@ -137,7 +139,7 @@ void measBatt(float *value)
 	float R2 = 10.0f; // 10k
 	float VDD = 3.3f; // 3V3
 	float r_div = ( R1 + R2 ) / R2;
-	float voltage = (float) result / (float) 0xFFFF * VDD * r_div * 0.92;
+	float voltage = (float) result / (float) 0xFFFF * VDD * r_div;
 
 	*value = voltage;
 }
@@ -185,7 +187,7 @@ static void MX_ADC3_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_64CYCLES_5; //ADC_SAMPLETIME_1CYCLE_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;

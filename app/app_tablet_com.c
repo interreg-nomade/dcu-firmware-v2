@@ -18,6 +18,8 @@
 #include "task.h"
 #include "cmsis_os.h"
 
+// [sendStreamRequestAnswer]
+
 /* APP header part */
 #include "app_tablet_com.h"
 #include "app_rtc.h"
@@ -58,7 +60,8 @@
 //#include "logs/devlogs.h"
 
 #include "common.h"
-#include "imu_com.h"
+//#include "imu_com.h"
+//Missing packet for cycle counter
 
 bool tablet_time_received = 0;
 
@@ -157,6 +160,8 @@ extern imu_module imu_6;
 extern imu_module *imu_array [];
 extern char string[];
 extern QueueHandle_t pPrintQueue;
+
+uint64_t epochMeasurementStart = 0;
 
 void cpl_init_rx_task(void)
 {
@@ -479,6 +484,7 @@ void cpl_ServiceHandler(cpl_msg_t * pMsg, fc_tx_handler_t * pfcTxHandler, fc_rx_
 //#endif
       	  //epoch_AD_ms += 60*60*2*1000; //  GMT+02:00 for DST
       	  app_rtc_set_unix_epoch_ms(epoch_AD_ms);
+      	  epochMeasurementStart = epoch_AD_ms;
       	  uint64_t epoch_AD_s = epoch_AD_ms/1000;
   	      struct tm dateTime;
   	      char buff[70];
@@ -598,7 +604,7 @@ void cpl_ServiceHandler(cpl_msg_t * pMsg, fc_tx_handler_t * pfcTxHandler, fc_rx_
 		{
 		  watchdogUsbRxCallback(); /* Update the watchdog timer */
 		  streamerServiceQueueMsg_t streamMsg; /* Response to ACK of streaming packet from the ANDROID Device */
-		  streamMsg.theirCycleCounter = (pMsg->DU[0] << 24) | (pMsg->DU[1] << 16) | (pMsg->DU[2] << 8) | (pMsg->DU[3]); /* Get cycle counter received by android device */
+		  streamMsg.theirCycleCounter = (pMsg->DU[0] << 24) | (pMsg->DU[1] << 16) | (pMsg->DU[2] << 8) | (pMsg->DU[3]); /* Get cycle counter received from android device */
 		  if(pMsg->DU[4] == 0xFE)
 		  { /* A packet is missing for more than 60 ms received ==> NACK from the android device */
 #if PRINTF_RTOS_UPLINK
@@ -660,17 +666,18 @@ void cpl_ServiceHandler(cpl_msg_t * pMsg, fc_tx_handler_t * pfcTxHandler, fc_rx_
 		  xQueueSend(pPrintQueue, "[APP_TABLET_COM] [cp_ServiceHandler] Received Service request to start a measurement.\n", 0);
 #endif
 		  uint64_t epochNow_Ms = 0;
-		  app_rtc_get_unix_epoch_ms(&epochNow_Ms); 										/* Get the unix time */
-//	      epochNow_Ms = 0x000000DC6B069A80;												/* Saturday, January 1, 2000 2:00:00 AM GMT+01:00 */
+		  app_rtc_get_unix_epoch_ms(&epochNow_Ms); 	          /* Get the unix time */
+//	      epochNow_Ms = 0x000000DC6B069A80;					  /* Saturday, January 1, 2000 2:00:00 AM GMT+01:00 */
 //	      epochNow_Ms += HAL_GetTick();
-		  app_rtc_set_cycle_counter(1); 												/* set cycle counter to 1 */
+		  app_rtc_set_cycle_counter(1); 				      /* set cycle counter to 1 */
 		  /* Send information to the measurement thread */
 		  serviceQueueMsg->status 			= measurement_StatusOriginAndroidDevice;
 		  serviceQueueMsg->action			= measurement_StartMeasurement;
 		  serviceQueueMsg->measurementId	= 0;
 		  serviceQueueMsg->startTime		= epochNow_Ms;
-		  //measurements_service_post(*serviceQueueMsg); 									/* Send notification to the storage thread */
-		  tablet_com_start_measurement_callback(epochNow_Ms); 							/* Answer to the start measurement request */
+
+		  //measurements_service_post(*serviceQueueMsg); 	  /* Send notification to the storage thread */
+		  tablet_com_start_measurement_callback(epochNow_Ms); /* Answer to the start measurement request */
 		}
 		else
 		{
@@ -1397,11 +1404,11 @@ void sendStreamRequestAnswer(unsigned int id, unsigned int ad)
 	msg.destinationAddress = ad | 0x80; /* Set the MSB */
 	msg.sourceAddress      = 0x81;		 /* hard code for the moment */
 	msg.FC                 = FLOW_CONTROL_FUNCTION_CODE_NOFLOW;
-	msg.destinationService      = (id >> 8) & 0x00ff;
-	msg.sourceService = id 	   & 0x00ff;
-	msg.payloadLength = 1;
-	msg.DU[0] = 0x80;
-	msg.lenght = 0x05 + msg.payloadLength;/* its 0x05 + the DU length */
+	msg.destinationService = (id >> 8) & 0x00ff;
+	msg.sourceService      = id 	   & 0x00ff;
+	msg.payloadLength      = 1;
+	msg.DU[0]              = 0x80;
+	msg.lenght             = 0x05 + msg.payloadLength;/* its 0x05 + the DU length */
 	cpl_buildFrame(&msg, &numElems, buffer);
 #if PRINTF_RTOS_UPLINK
     xQueueSend(pPrintQueue, "[APP_TABLET_COM] [sendStreamRequestAnswer] Sending:", 0);

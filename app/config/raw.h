@@ -66,16 +66,16 @@ typedef struct {
 //	uint8_t instrumentNr; // added 20220221
 
 	// Coordinate for view
-	int32_t 	x;
-	int32_t 	y;
-	int32_t 	r;
+	int32_t x;
+	int32_t y;
+	int32_t r;
 
 	// Communication Method
-	uint32_t 			comMethod;
-	uint32_t 			comMethodVersion;
+	uint32_t comMethod;
+	uint32_t comMethodVersion;
 
 	// Communication fail consequence
-	uint32_t  	comFail;
+	uint32_t comFail;
 
 	// Communication Address
 	uint32_t comAddress;
@@ -100,18 +100,18 @@ typedef struct {
 	/* Maybe Add a tab of sensor, index of the tab sensor can be the ID of the sensors ?
 	*int32_t Sensor_ID[NUM_MAX_OF_SENSOR];
 	* For now just 4 variable for 4 sensor */
-	uint32_t sensorID1;
-	uint32_t sensorID2;
-	uint32_t sensorID3;
-	uint32_t sensorID4;
-	uint32_t sensorID5;
-	uint32_t sensorID6;
-	uint32_t sensorID7;
-	uint32_t sensorID8;
+	//uint32_t sensorID1;
+	//uint32_t sensorID2;
+	//uint32_t sensorID3;
+	//uint32_t sensorID4;
+	//uint32_t sensorID5;
+	//uint32_t sensorID6;
+	//uint32_t sensorID7;
+	//uint32_t sensorID8;
 
 	// Information relative to the sensor
-	uint32_t viewAngle;
-	uint32_t interSensorDistance;
+	//uint32_t viewAngle;
+	//uint32_t interSensorDistance;
 
 	uint32_t pollRank; // in use since 20220222 for the BLEmodules:
 	                   // pollRank points to the BLEmodule number it is linked to.
@@ -119,13 +119,13 @@ typedef struct {
 
 	uint16_t outputDataSize; //in bytes
 
-	uint32_t joystickID;
-	uint32_t profileNumber;
-	uint32_t shortThrowTravel;
-	uint32_t maximumForwardSpeed;
-	uint32_t pwcMaximumSpeed;
+	//uint32_t joystickID;
+	//uint32_t profileNumber;
+	//uint32_t shortThrowTravel;
+	//uint32_t maximumForwardSpeed;
+	//uint32_t pwcMaximumSpeed;
 
-	uint32_t pwcBoundaryCalibration;
+	//uint32_t pwcBoundaryCalibration;
 
 	 // Data Bluetooth MAC address
 	 uint32_t BTMACHigh;

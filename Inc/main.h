@@ -153,11 +153,18 @@ void Error_Handler(void);
 #define IMU_SENSOR_MODULE_GET_NEED_TO_CALIBRATE    0x73
 
 
+#define SHLD_BUTTON_1_Pin GPIO_PIN_0		// PD0 according to hardware schematic 20220104
+#define SHLD_BUTTON_1_GPIO_Port GPIOD	    // PD0
+#define SHLD_BUTTON_1_EXTI_IRQn EXTI0_IRQn	// PD0 EXTI0_IRQn
 
+#define SHLD_BUTTON_2_Pin GPIO_PIN_1		// PD1 according to hardware schematic 20220104
+#define SHLD_BUTTON_2_GPIO_Port GPIOD	    // PD1
+#define SHLD_BUTTON_2_EXTI_IRQn EXTI1_IRQn	// PD1 EXTI1_IRQn
 
-#define USER_BUTTON_Pin GPIO_PIN_2			// PF2
-#define USER_BUTTON_GPIO_Port GPIOF			// PF2
+#define USER_BUTTON_Pin GPIO_PIN_3			// PF2            ---> according to hardware schematic 20220104 the user button is on PA3
+#define USER_BUTTON_GPIO_Port GPIOA			// PF2            ---> changed to GPIOA in stead of GPIOF
 #define USER_BUTTON_EXTI_IRQn EXTI2_IRQn	// PF2 EXTI2_IRQn
+
 
 //#define STCC_CHARGING_Pin GPIO_PIN_3		// PF3 old dcu
 //#define STCC_CHARGING_GPIO_Port GPIOF		// PF3 old dcu
@@ -189,11 +196,14 @@ void Error_Handler(void);
 #define STCC_CTL3_Pin GPIO_PIN_4		    // PE4
 #define STCC_CTL3_GPIO_Port GPIOE			// PE4
 
-#define LED_GOOD_Pin GPIO_PIN_0				// PB0
-#define LED_GOOD_GPIO_Port GPIOB			// PB0
+#define USER_LED_Pin GPIO_PIN_0				// PB0  --> USER_LED according to hardware schematic 20220104
+#define USER_LED_GPIO_Port GPIOB			// PB0
 
-#define LED_ERROR_Pin GPIO_PIN_14			// PB14
-#define LED_ERROR_GPIO_Port GPIOB			// PB14
+#define SHLD_BUTTON_2_LED_Pin GPIO_PIN_4    // PA4  --> SHLD_BUTTON_2_LED according to hardware schematic 20220104
+#define SHLD_BUTTON_2_LED_GPIO_Port GPIOA   // PA4
+
+//#define LED_ERROR_Pin GPIO_PIN_14			// PB14
+//#define LED_ERROR_GPIO_Port GPIOB			// PB14
 
 #define SD_ON_OFF_Pin GPIO_PIN_8			// PA8
 #define SD_ON_OFF_GPIO_Port GPIOA			// PA8
@@ -201,15 +211,15 @@ void Error_Handler(void);
 #define SD_DETECT_Pin GPIO_PIN_9			// PA9
 #define SD_DETECT_GPIO_Port GPIOA			// PA9
 
-//#define I2C1_INT_Pin GPIO_PIN_5				// PB5
+//#define I2C1_INT_Pin GPIO_PIN_5			// PB5
 //#define I2C1_INT_GPIO_Port GPIOB			// PB5
-//#define I2C1_INT_EXTI_IRQn EXTI9_5_IRQn		// PB5 EXTI9_5_IRQn
+//#define I2C1_INT_EXTI_IRQn EXTI9_5_IRQn	// PB5 EXTI9_5_IRQn
 
 #define VDD_BOOST_EN_Pin GPIO_PIN_5         // PB5
 #define VDD_BOOST_EN_GPIO_Port GPIOB        // PB5
 
-#define LED_BUSY_Pin GPIO_PIN_7				// PB7
-#define LED_BUSY_GPIO_Port GPIOB			// PB7
+//#define LED_BUSY_Pin GPIO_PIN_7			// PB7
+//#define LED_BUSY_GPIO_Port GPIOB			// PB7
 
 #define VDD_RTC_EN_Pin GPIO_PIN_15          // PG15
 #define VDD_RTC_EN_GPIO_Port GPIOG          // PG15

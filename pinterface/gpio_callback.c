@@ -6,24 +6,26 @@
  */
 #include "gpio_callback.h"
 #include "gpio.h"
-#include "imu_com.h"
+#include "app_imuCalibration.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 
-extern imu_module imu_1;
-extern imu_module imu_2;
-extern imu_module imu_3;
-extern imu_module imu_4;
-extern imu_module imu_5;
-extern imu_module imu_6;
+extern SemaphoreHandle_t wakeIMUCalibrationTask;
+
+BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
 void HAL_GPIO_EXTI_Callback(uint16_t n)
 {
-	if(n == USER_BUTTON_Pin){ //GPIO_PIN_2
-		//HAL_GPIO_TogglePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin);
-		//IMU_go_to_sleep(&imu_1);
-		//IMU_go_to_sleep(&imu_2);
-		//IMU_go_to_sleep(&imu_3);
-		//IMU_go_to_sleep(&imu_4);
-		//IMU_go_to_sleep(&imu_5);
-		//IMU_go_to_sleep(&imu_6);
-	}
+  if (n == SHLD_BUTTON_2_Pin)
+  {
+	xSemaphoreGiveFromISR(wakeIMUCalibrationTask, &xHigherPriorityTaskWoken);
+	portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+  }
+  else
+  {
+    if (n == USER_BUTTON_Pin)
+    {
+      HAL_GPIO_TogglePin(USER_LED_GPIO_Port, USER_LED_Pin);
+    }
+  }
 }

@@ -1037,12 +1037,12 @@ int datatypeToRaw_imu_quat_9DOF(imu_100Hz_data_t * pImu, unsigned char *dest)
   tmp = (short) imu.rotVectors1.k;
   dest[6] = tmp >> 8 & 0xFF;
   dest[7] = tmp & 0xFF;
-#if PRINTF_OPERATIONS_DBG
-  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
-												(unsigned int) HAL_GetTick(),
-												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
-  xQueueSend(pPrintQueue, string, 0);
-#endif
+//#if PRINTF_OPERATIONS_DBG
+//  sprintf(string, "%u [operations] [datatypeToRaw_imu_quat] [dest 0-7] 0x%02X %02X %02X %02X %02X %02X %02X %02X\n",
+//												(unsigned int) HAL_GetTick(),
+//												dest[0],dest[1],dest[2],dest[3],dest[4],dest[5],dest[6],dest[7]);
+//  xQueueSend(pPrintQueue, string, 0);
+//#endif
   return 8;
 }
 
@@ -2221,7 +2221,7 @@ int rawToStruct_imu_6axis(unsigned int * source, unsigned int size, unsigned int
 //}
 
 
-static void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {
     out->rotVectors1.real = ((float)in->rotVectors1.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors1.i = ((float)in->rotVectors1.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
@@ -2229,7 +2229,7 @@ static void decode_quat_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
     out->rotVectors1.k = ((float)in->rotVectors1.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
 }
 
-static void decode_quat_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+void decode_quat_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {
     out->rotVectors1.real = ((float)in->rotVectors1.real / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
     out->rotVectors1.i = ((float)in->rotVectors1.i / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
@@ -2242,7 +2242,7 @@ static void decode_quat_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
     out->rotVectors2.k = ((float)in->rotVectors2.k / (float)(1 << FIXED_POINT_FRACTIONAL_BITS_QUAT)) * NRF_QUAT_APP_SCALE_FACTOR;
 }
 
-static void decode_raw_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+void decode_raw_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {
     out->gyroscope1.x = ((float)in->gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
     out->gyroscope1.y = ((float)in->gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
@@ -2263,7 +2263,7 @@ static void decode_raw_50hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 	xQueueSend(pPrintQueue, string, 0);*/
 }
 
-static void decode_raw_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
+void decode_raw_100hz(imu_100Hz_data_t* in, imu_100Hz_data_t* out)
 {
     out->gyroscope1.x = ((float)in->gyroscope1.x / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;
     out->gyroscope1.y = ((float)in->gyroscope1.y / (float)(1 << RAW_Q_FORMAT_GYR_COMMA_BITS)) * NRF_GYRO_APP_SCALE_FACTOR;

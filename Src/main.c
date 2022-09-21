@@ -62,10 +62,7 @@
 #include "gpio.h"
 #include "bsp_driver_sd.h"
 #include "usb_com.h"
-#include "imu_com.h"
-#include "UartRingbuffer.h"
-#include "UartRingbufferManager.h"
-#include "uart_com.h"
+#include "data/structures.h"
 #include "math.h"
 #include "../pinterface/interface_sd.h"
 #include "nRF52_driver.h"
@@ -117,10 +114,6 @@ imu_module imu_7 = {7, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE
 imu_module imu_8 = {8, 0, 0, &huart4, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "BLE Module 8", 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 imu_module *imu_array [] = {&imu_1, &imu_2, &imu_3, &imu_4, &imu_5, &imu_6, &imu_7, &imu_8};
-
-uint8_t ringbufferFull;
-
-//uint16_t file_nummer = 0;
 
 uint8_t gpio_buf_IC5 = 0x00;
 
@@ -212,7 +205,7 @@ int main(void)
   HAL_GPIO_WritePin(VDD_RTC_EN_GPIO_Port, VDD_RTC_EN_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(VDD_BOOST_EN_GPIO_Port, VDD_BOOST_EN_Pin, GPIO_PIN_SET);
 
-  HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(LED_ERROR_GPIO_Port, LED_ERROR_Pin, GPIO_PIN_SET);
 
   HAL_GPIO_WritePin(STCC_EN_GPIO_Port, STCC_EN_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(STCC_CTL1_GPIO_Port, STCC_CTL1_Pin, GPIO_PIN_SET);

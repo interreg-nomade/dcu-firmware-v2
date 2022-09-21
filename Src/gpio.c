@@ -75,23 +75,28 @@ void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-//!!  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(STCC_EN_GPIO_Port, STCC_EN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_GOOD_Pin|LED_ERROR_Pin|LED_BUSY_Pin, GPIO_PIN_RESET);
+  /*Configure GPIO pin : SHLD_BUTTON_1 */
+  GPIO_InitStruct.Pin = SHLD_BUTTON_1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SHLD_BUTTON_1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SD_ON_OFF_GPIO_Port, SD_ON_OFF_Pin, GPIO_PIN_RESET);
+  /*Configure GPIO pin : SHLD_BUTTON_2 */
+  GPIO_InitStruct.Pin = SHLD_BUTTON_2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SHLD_BUTTON_2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USER_BUTTON_Pin */
   GPIO_InitStruct.Pin = USER_BUTTON_Pin;
@@ -139,12 +144,22 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(STCC_CTL3_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_GOOD_Pin LED_ERROR_Pin LED_BUSY_Pin */
-  GPIO_InitStruct.Pin = LED_GOOD_Pin|LED_ERROR_Pin|LED_BUSY_Pin;
+  /*Configure GPIO pins : USER_LED_Pin */
+//  GPIO_InitStruct.Pin = LED_GOOD_Pin|LED_ERROR_Pin|LED_BUSY_Pin; // changed on 20220429 to USER_LED & SHLD_BUTTON_2_LED
+  GPIO_InitStruct.Pin = USER_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(USER_LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOB, USER_LED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : SHLD_BUTTON_2_LED_Pin */
+  GPIO_InitStruct.Pin = SHLD_BUTTON_2_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SHLD_BUTTON_2_LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(GPIOA, SHLD_BUTTON_2_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SD_ON_OFF_Pin */
   GPIO_InitStruct.Pin = SD_ON_OFF_Pin;
@@ -152,6 +167,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SD_ON_OFF_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(SD_ON_OFF_GPIO_Port, SD_ON_OFF_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : SD_DETECT_Pin */
   GPIO_InitStruct.Pin = SD_DETECT_Pin;
@@ -159,7 +175,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SD_DETECT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USER_LED_Pin VDD_BOOST_EN_Pin BQ25300_EN_Pin VDD_FT312D_EN_Pin */
+  /*Configure GPIO pins : VDD_BOOST_EN_Pin */
   GPIO_InitStruct.Pin = VDD_BOOST_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -173,8 +189,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(VDD_RTC_EN_GPIO_Port, &GPIO_InitStruct);
 
-
-
   /*Configure GPIO pin : I2C1_INT_Pin */
 //  GPIO_InitStruct.Pin = I2C1_INT_Pin;
 //  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -182,7 +196,13 @@ void MX_GPIO_Init(void)
 //  HAL_GPIO_Init(I2C1_INT_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 1, 0); //was 0 Deze is voor de USER button!
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 15, 0); // SHLD_BUTTON_1, lowest priority
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 15, 0); // SHLD_BUTTON_2, lowest priority
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 15, 0); // USER_BUTTON, lowest priority
   HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
 //  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 1, 0); // was 0 Waarvoor is deze???

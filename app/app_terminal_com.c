@@ -13,7 +13,8 @@
 #include <string.h>
 #include "../Inc/usb_com.h"
 #include "../pinterface/interface_sd.h"
-#include "../Inc/imu_com.h"
+//#include "../Inc/imu_com.h"
+#include "data/structures.h"
 #include "app_rtc.h"
 #include "../Inc/nRF52_driver.h"
 #include "app_nRF52_com.h"
@@ -76,7 +77,7 @@ void com_init_rx_task(void)
 
     memset(&ComRxMsg, 0, sizeof(com_msg_t));
 
-    osThreadDef(terminalComManager, terminalComManagerThread, osPriorityRealtime, 0, 1024);
+    osThreadDef(terminalComManager, terminalComManagerThread, osPriorityAboveNormal, 0, 1024);
     comRxTaskHandle = osThreadCreate(osThread(terminalComManager), NULL);
 }
 

@@ -14,13 +14,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../ring_buffer/ringbuffer_char.h"
+#include "../ring_buffer/ringbuffer4x_char.h"
 
 #include "usart.h"
 #include "../../app/app_init.h" // to declare QueueHandle_t
 
 /* Variable definitions */
-static ring_buffer_t cplRingbufRx;
+static ring_4xbuffer_t cplRingbufRx;
 
 /* Debug! TODO: remove once dev is finished, or macro comment */
 
@@ -51,19 +51,18 @@ extern QueueHandle_t pPrintQueue;
 
 void cpl_RxHandler(char c)
 {
-    // Queue in ring buffer the rx'd byte
-    ring_buffer_queue(&cplRingbufRx, c);
+  ring_4xbuffer_queue(&cplRingbufRx, c); // Queue in ring buffer the rx'd byte
 }
 
 unsigned int cpl_RxBufferSize(void)
 {
-	return ring_buffer_num_items(&cplRingbufRx);
+  return ring_4xbuffer_num_items(&cplRingbufRx);
 }
 
 void cpl_init()
 {
-    ring_buffer_init(&cplRingbufRx);
-    cpl_rst_msg(&tmpCplMsg);
+  ring_4xbuffer_init(&cplRingbufRx);
+  cpl_rst_msg(&tmpCplMsg);
 }
 
 void cpl_rst_msg(cpl_msg_t * pCplMsg)
@@ -383,9 +382,9 @@ static int cpl_FindSdByte(void)
     char rxdByte;
     rxdByte = 0;
 
-    while (!ring_buffer_is_empty(&cplRingbufRx))
+    while (!ring_4xbuffer_is_empty(&cplRingbufRx))
     {
-        ring_buffer_dequeue(&cplRingbufRx, &rxdByte);
+        ring_4xbuffer_dequeue(&cplRingbufRx, &rxdByte);
         if (rxdByte == CPL_START_DELIMITER)
         {
             return 1;
@@ -400,15 +399,15 @@ static int cpl_BuildHeader(void)
 
     memset(rxdByte, 0, 2);
 
-    if (ring_buffer_num_items(&cplRingbufRx) >= 3)
+    if (ring_4xbuffer_num_items(&cplRingbufRx) >= 3)
     {
-		ring_buffer_dequeue(&cplRingbufRx, &rxdByte[0]);
-		ring_buffer_dequeue(&cplRingbufRx, &rxdByte[1]);
+		ring_4xbuffer_dequeue(&cplRingbufRx, &rxdByte[0]);
+		ring_4xbuffer_dequeue(&cplRingbufRx, &rxdByte[1]);
         if (rxdByte[0] == rxdByte[1])
         {
             /* LEngth is correctly repeated */
             tmpCplMsg.lenght = rxdByte[0];
-			ring_buffer_dequeue(&cplRingbufRx, &rxdByte[1]);
+			ring_4xbuffer_dequeue(&cplRingbufRx, &rxdByte[1]);
 			if(rxdByte[1] == CPL_START_DELIMITER)
 			{
 				return 1;
@@ -424,19 +423,19 @@ static int cpl_BuildHeader(void)
 
 static int cpl_BuildBody(void)
 {
-	if(ring_buffer_num_items(&cplRingbufRx) >= tmpCplMsg.lenght)
+	if(ring_4xbuffer_num_items(&cplRingbufRx) >= tmpCplMsg.lenght)
 	{
-		ring_buffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.destinationAddress);
-		ring_buffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.sourceAddress);
-		ring_buffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.FC);
-		ring_buffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.destinationService);
-		ring_buffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.sourceService);
+		ring_4xbuffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.destinationAddress);
+		ring_4xbuffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.sourceAddress);
+		ring_4xbuffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.FC);
+		ring_4xbuffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.destinationService);
+		ring_4xbuffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.sourceService);
 
 		tmpCplMsg.payloadLength = tmpCplMsg.lenght - 5; /* DU = BODY LENGTH - (DALen + SALen + FCLen + DSAPLen + SSAPLen */
 
 		for(unsigned int i = 0; i < tmpCplMsg.payloadLength; i++)
 		{
-			ring_buffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.DU[i]);
+			ring_4xbuffer_dequeue(&cplRingbufRx, (char*)&tmpCplMsg.DU[i]);
 		}
 
 		return 1;
@@ -450,10 +449,10 @@ static int cpl_FcsCorrect(void)
 	char retrievedFcs;
 	char retrievedEd;
 
-	if(ring_buffer_num_items >= CPL_TAIL_LENGTH)
+	if(ring_4xbuffer_num_items >= CPL_TAIL_LENGTH)
 	{
-		ring_buffer_dequeue(&cplRingbufRx, &retrievedFcs);
-		ring_buffer_dequeue(&cplRingbufRx, &retrievedEd);
+		ring_4xbuffer_dequeue(&cplRingbufRx, &retrievedFcs);
+		ring_4xbuffer_dequeue(&cplRingbufRx, &retrievedEd);
 
 		if (retrievedEd == CPL_END_DELIMITER)
 		{
@@ -527,7 +526,7 @@ int cpl_buildFrame(cpl_msg_t * Msg, unsigned int * cx, char * buffer)
 static int cpl_BodyPartPresent(void)
 {
     /* +5 because we count LE, LEr, SD, FCS, ED */
-    if (ring_buffer_num_items(&cplRingbufRx) >= (tmpCplMsg.lenght))
+    if (ring_4xbuffer_num_items(&cplRingbufRx) >= (tmpCplMsg.lenght))
     {
         return 1;
     }
@@ -539,7 +538,7 @@ static int cpl_BodyPartPresent(void)
 
 static int cpl_TailPartPresent(void)
 {
-	if(ring_buffer_num_items(&cplRingbufRx) >= CPL_TAIL_LENGTH)
+	if(ring_4xbuffer_num_items(&cplRingbufRx) >= CPL_TAIL_LENGTH)
 	{
 		return 1;
 	}
@@ -578,7 +577,7 @@ static void cpl_RstTimeout(unsigned int * var)
 static int cpl_HeaderPartPresent(void)
 {
     /* +5 because we count LE, LEr, SD, FCS, ED */
-	if (ring_buffer_num_items(&cplRingbufRx) >= CPL_HEADER_LENGTH - 1)
+	if (ring_4xbuffer_num_items(&cplRingbufRx) >= CPL_HEADER_LENGTH - 1)
     {
         return 1;
     }

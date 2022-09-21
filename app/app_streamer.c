@@ -41,19 +41,23 @@ extern QueueHandle_t pPrintQueue;
 
 void initStreamerThread(void)
 {
-  osThreadDef(tabletDataStreamThread, tabletDataStreamThread, osPriorityNormal, 0, 2048); /* Tablet Link thread definition  */
+  osThreadDef(tabletDataStreamThread, tabletDataStreamThread, osPriorityAboveNormal, 0, 2048); /* Tablet Link thread definition  */
   streamerThreadHandle = osThreadCreate (osThread(tabletDataStreamThread), NULL); /* Start tablet link thread  */
 }
 
 void tabletDataStreamThread(const void *params)
 {
   uint32_t ulNotificationValue = 0; 						/* Used for the notification coming from the app sync thread */
-  const TickType_t xMaxBlockTime = pdMS_TO_TICKS(400);		/* Block 400 ms */
+  const TickType_t xMaxBlockTime = pdMS_TO_TICKS(30);		/* Block 30 ms, was 400ms!!! */
   unsigned int ltLastAck = 0; 								/* Used to handle the ack timeout */
   uint64_t epochNow_Ms = 0; 								/* Unix epoch in ms */
   streamerServiceQueueMsg_t service; 						/* Initialize variable of transmission  */
   bool stream_init_done = false;							/* to make sure we initialize pHandler only once*/
   stream_init(&USB_Android_Port_Handler);
+  while (decodedConfig.state != CONF_CORRECT)
+  {  /* Loop until the configuration is decoded */
+	osDelay(20);
+  }
   for(;;)
   {
 	if (streamer_service_receive(&service))
@@ -169,12 +173,12 @@ void tabletDataStreamThread(const void *params)
 	if (xTaskNotifyWait( 0x00,               		/* Don't clear any bits on entry. */
 						 0xffffffff,          		/* Clear all bits on exit. (long max) */
 						 &ulNotificationValue, 		/* Receives the notification value. */
-						 xMaxBlockTime ) == pdTRUE)	/* Block 400 ms */
+						 xMaxBlockTime ) == pdTRUE)	/* Block 400 ms --> changed to 30ms */
 	{
 	  if ((ulNotificationValue & APP_STREAMER_NOTIF_CYCLE_COUNTER) == APP_STREAMER_NOTIF_CYCLE_COUNTER)
 	  { /* Received a notification from app_sync */
 	    if (((xTaskGetTickCount() - ltLastAck) > STREAMER_ACK_TIMEOUT) && (USB_Android_Port_Handler.state == streamingPort_ENABLED ))
-		{ /* First if the streaming is enable -> check for the ACK timeout */
+		{ /* First if the streaming is enabled -> check for the ACK timeout */
 //		  USB_Android_Port_Handler.state = streamingPort_DISABLED;
 		}
 		if (USB_Android_Port_Handler.state == streamingPort_ENABLED)
@@ -194,9 +198,26 @@ void tabletDataStreamThread(const void *params)
 				stream_send(&USB_Android_Port_Handler); 							/* send the stream buffer */
 			  }
 			}
+			else
+			{
+			  sprintf(string, "%u [app_streamer] Stream buffer can not be processed.\n",(unsigned int) HAL_GetTick());
+			  xQueueSend(pPrintQueue, string, 0);
+
+			}
+		  }
+		  else
+		  {
+			sprintf(string, "%u [app_streamer] Streaming port not available.\n",(unsigned int) HAL_GetTick());
+		    xQueueSend(pPrintQueue, string, 0);
 		  }
 		}
 	  }
+	}
+	else
+	{
+	  sprintf(string, "%u [app_streamer] Task block time (30ms) extended.\n",(unsigned int) HAL_GetTick());
+	  xQueueSend(pPrintQueue, string, 0);
+
 	}
   }
 }

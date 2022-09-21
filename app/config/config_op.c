@@ -954,7 +954,7 @@ int getNumberOfInstrumentSpecificFromConfig(decoded_config_t * conf, int type)
   return j;
 }
 
-int getInstrumentFromConfig(decoded_config_t * conf, instrument_config_t ** pResInst, int type, uint16_t instNr)
+int getInstrumentFromConfig(decoded_config_t * conf, instrument_config_t ** pResInst, int type)
 {
   if (!conf)
   { //decodedConfig.conf = null

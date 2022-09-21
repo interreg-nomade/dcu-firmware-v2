@@ -13,7 +13,8 @@
 #include "usart.h"  //to declare huart5
 #include "string.h" //to declare memset
 #include "../common.h"
-#include "../../Inc/imu_com.h"
+//#include "../../Inc/imu_com.h"
+#include "data/structures.h"
 #include "app_terminal_com.h" // to be able to print module overview data with module_status_overview()
 
 
@@ -34,6 +35,7 @@ extern imu_module *imu_array [];
 extern char string[];
 extern QueueHandle_t pPrintQueue;
 
+int numberOfModules = 0;
 
 /**
  * @fn decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
@@ -79,8 +81,9 @@ decode_result decode_config(const uint8_t *buffer, decoded_config_t *config)
 	  config->numberOfInstruments = config->numberOfInstruments | buffer[++count];
 	  config->instruments         = malloc(config->numberOfInstruments * sizeof(config->instruments[0]));
 	  memset(config->instruments, 0, config->numberOfInstruments*sizeof(config->instruments[0]));
+	  numberOfModules = (int) (config->numberOfInstruments-1);
 #if RAW_DBG_PRINTF
-	  sprintf(string, "[RAW] [decode_config] ------------ Number of instruments: %d\r\n", config->numberOfInstruments);
+	  sprintf(string, "[RAW] [decode_config] ------------ Number of instruments: %d\r\n", (numberOfModules + 1));
 	  xQueueSend(pPrintQueue, string, 0);
 #endif
 	  for (uint16_t i = 0; i < config->numberOfInstruments; i++)

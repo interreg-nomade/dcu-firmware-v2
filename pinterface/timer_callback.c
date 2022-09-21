@@ -10,8 +10,10 @@
 #include "tim.h"
 #include "../app/app_rtc.h"
 #include "../app/app_sync.h"
-#include "../Inc/imu_com.h"
+//#include "../Inc/imu_com.h"
+#include "data/structures.h"
 #include "../Inc/sd_card_com.h"
+#include "queues/streamer_service/streamer_service_queue.h"
 
 extern imu_module imu_1;
 extern imu_module imu_2;
@@ -22,6 +24,12 @@ extern imu_module imu_6;
 
 extern imu_module *imu_array [];
 extern char string[];
+extern QueueHandle_t pPrintQueue;
+
+extern uint8_t streamPacket;
+extern streamerServiceQueueMsg_t streamMsgEnabled;
+
+uint8_t noPacketStreamed = 0;
 
 #define PRINTF_DBG_timer 1
 
@@ -39,12 +47,19 @@ void tim2_callback(void) // every 5ms
 {
 	static unsigned int localCounter = 0;
 
+	if ((streamMsgEnabled.action == streamerService_EnableAndroidStream) && (streamPacket > 1))
+	{
+		noPacketStreamed = 1;
+//		xQueueSend(pPrintQueue, "[timer_callback] No packed streamed!\n", 0);
+	}
+
 	if ((++localCounter) == 4) // every 20ms! -> if this is being changed, change also streamPeriod in app_imu.c
 	//if ((++localCounter) == 2) // every 10ms!
 	{
 		localCounter = 0;
 		app_rtc_inc_cycle_counter(); // Increment the cycle counter
 		app_sync_notify_from_isr(1); // Notify the sync thread
+		streamPacket++;
 	}
 
 	//HAL_GPIO_TogglePin(LED_GOOD_GPIO_Port, LED_GOOD_Pin);

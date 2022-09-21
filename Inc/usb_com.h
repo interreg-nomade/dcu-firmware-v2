@@ -27,7 +27,8 @@
 #include "stm32h7xx_hal.h"
 #include <string.h>
 #include <stdio.h>
-#include "imu_com.h"
+//#include "imu_com.h"
+#include "data/structures.h"
 #include "sd_card_com.h"
 
 extern UART_HandleTypeDef huart7;

@@ -32,7 +32,7 @@ int config_createStoragePacket(decoded_config_t * pConf,
 		unsigned char * pDest,
 		unsigned int * pSize);
 
-int getInstrumentFromConfig(decoded_config_t * config, instrument_config_t ** pConf, int type, uint16_t instNr);
+int getInstrumentFromConfig(decoded_config_t * config, instrument_config_t ** pConf, int type);
 //!int getInstrumentFromConfig(decoded_config_t * config, instrument_config_t ** pConf, int type, int number);
 int getNumberOfInstrumentSpecificFromConfig(decoded_config_t * conf, int type);
 int config_linkParsingFunctions_fromList(decoded_config_t * pConf, parsing_assoc_t * list, unsigned int nNodes);

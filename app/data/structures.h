@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <time.h>
+#include "stm32h7xx_hal.h"
 
 #define MAX_NUMBER_OF_DISTANCE_SENSORS 32
 #define DEFAULT_DISTANCE_NODE_
@@ -66,9 +67,6 @@ typedef struct {
 
 /* Generic structure */
 typedef struct {
-	/* Timestamp as milliseconds elapsed since t0 (bootup time) */
-//	unsigned int	timestamp; // removed to optimize data size to sensor queue
-
 	float x;
 	float y;
 	float z;
@@ -232,9 +230,8 @@ typedef struct {
 
 typedef struct {
 	/* Timestamp as milliseconds elapsed since t0 (bootup time) */
-	unsigned int	    timestamp;
-//!	unsigned int        module;
-
+//	unsigned int	    timestamp;
+	uint64_t            timestamp;
 	three_axis_data_t	accelerometer1;
 	three_axis_data_t	gyroscope1;
 	three_axis_data_t	magnetometer1;
@@ -308,6 +305,28 @@ typedef struct
 		};
 	};
 }usbad_data_t;
+
+/* IMU module status variables -----------------------------------------------*/
+typedef struct __imu_module{
+	volatile uint8_t   number;
+	volatile uint8_t   connectingSequence;  // added 07/04/2022 to link the received data from nRF52 with the right sequence in the raw file
+	volatile uint8_t   instrument;
+	UART_HandleTypeDef *uart;
+	uint8_t            mac_address [6];     // as defined in the RAW file
+	char               *name;
+	volatile uint8_t   macAddressAvailable;
+	volatile uint8_t   connected;
+	volatile uint8_t   sampleFrequency;     // as defined in the RAW file
+	volatile uint8_t   sampleRateGiven;     // is zero when the sensor has not confirmed that the sample rate is set
+	volatile uint8_t   is_calibrated;
+	volatile uint8_t   measuring;           // is zero when the sensor is not measuring
+	volatile uint16_t  battery_voltage;
+	volatile uint32_t  sync_time;
+	volatile uint32_t  outputDataType;      // see parameters_id.h, copy of output data type defined in the RAW file
+	volatile uint8_t   outputDataTypeGiven; // is zero when the sensor has not confirmed that the data output type is set
+	volatile uint8_t   is_synchronized;        // is 1 when synchronized
+	/* ... */
+} imu_module;
 
 
 #include "time.h"

@@ -29,6 +29,15 @@ static instrument_config_t * pBLEmodule4Instrument;
 extern char string[];
 extern QueueHandle_t pPrintQueue;
 
+uint16_t itemsAddedToBLEmodule4eventQueue = 0;
+uint16_t itemsSubstractedFromBLEmodule4eventQueue = 0;
+//uint64_t timestampqueue4 = 0;
+extern uint64_t maxTimeStampInQueues;
+extern uint64_t timeStampQueue[6];
+extern uint8_t Synchronised;
+
+extern int numberOfModules;
+
 void BLEmodule4_task_init()
 {
   osThreadDef(BLEmodule4Task, BLE4Task, osPriorityNormal, 0, 1024); //Declaration of BLEmodule task
@@ -39,38 +48,60 @@ static void BLE4Task(const void * params)
 {
   imu_100Hz_data_t sensorEvent;
   imu_100Hz_data_t resBLEmodule4Data;	//Structure to store the BLE module data
-  const unsigned int streamPeriod = 20; // 20ms -> if this is being changed, change also localCounter in timer_callback.c
-  unsigned int previousQueuing = 0;     //Store the time of the previous post in main queue
   BLEmodule4_init();                    //Initialize BLE module and RTOS resources.
   for(;;)
   {
-
-	if (xTaskGetTickCount() >= (previousQueuing + streamPeriod))
-	{/* It is time to send a new message */
-	  xSemaphoreTake(wakeBLEmodule4Task, portMAX_DELAY);      // Wait until something happens
-	  xQueueReceive(BLEmodule4eventQueue, &sensorEvent, 0);
-	  refreshBLEmoduleData(&sensorEvent, &resBLEmodule4Data); // Copy actual BLE module data to structure that will be queued by reference
-	  if (pBLEmodule4Instrument)                              // Time to stream a message
-	  {
-		imu_100Hz_data_t * pData = NULL;
-		pData 				     = (imu_100Hz_data_t*) pBLEmodule4Instrument->data;
-		*pData 				     = resBLEmodule4Data;
-	  }
-	  else
-	  {
-	    xQueueSend(pPrintQueue, "[APP_BLEmodule4] [BLE4Task] pBLEmoduleInstrument = 0.\n", 0);
-	  }
-	  previousQueuing = xTaskGetTickCount();
-	}
+    if (uxQueueMessagesWaiting(BLEmodule4eventQueue))
+    {
+      itemsSubstractedFromBLEmodule4eventQueue++;
+  	  xQueueReceive(BLEmodule4eventQueue, &sensorEvent, 0);
+  	  timeStampQueue[3] = sensorEvent.timestamp;
+      if ((uxQueueMessagesWaiting(BLEmodule4eventQueue) > 10) && ((maxTimeStampInQueues - timeStampQueue[3]) > 19) && (maxTimeStampInQueues > timeStampQueue[3]))
+      {
+        itemsSubstractedFromBLEmodule4eventQueue++;
+        xQueueReceive(BLEmodule4eventQueue, &sensorEvent, 0);
+        timeStampQueue[3] = sensorEvent.timestamp;
+//        xQueueSend(pPrintQueue, "[APP_BLEmodule4] [BLE4Task] removed sensor event to synchronise.\n", 0);
+      }
+  	  refreshBLEmoduleData(&sensorEvent, &resBLEmodule4Data); // Copy actual BLE module data to structure that will be queued by reference
+  	  if (pBLEmodule4Instrument)
+  	  { // Time to stream a message
+  	    imu_100Hz_data_t * pData = NULL;
+  	    pData 				   = (imu_100Hz_data_t*) pBLEmodule4Instrument->data;
+  	    *pData 				   = resBLEmodule4Data;
+      }
+      else
+      {
+        xQueueSend(pPrintQueue, "[APP_BLEmodule4] [BLE4Task] pBLEmoduleInstrument = 0.\n", 0);
+      }
+      osDelay(20);
+    }
   }
 }
 
 static void BLEmodule4_init(void)
 {
-  if (BLEmodule4_Config_Init())
-  { // configuration is decoded and pointer handler is linked to BLE module 4
-    wakeBLEmodule4Task = xSemaphoreCreateBinary(); // Creating binary semaphore
-    BLEmodule4eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE, sizeof(imu_100Hz_data_t)); // Create queue to store data from BLE instrument
+  if (BLEmodule4_Config_Init()) // decode configuration and link pointer handler to BLE module 4
+  {
+    //wakeBLEmodule4Task = xSemaphoreCreateBinary(); // Creating binary semaphore
+	switch (numberOfModules)
+	{ // Create queue to store data from BLE instrument
+	  case 6:
+	  {
+		BLEmodule4eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE, sizeof(imu_100Hz_data_t));
+		break;
+	  }
+	  case 5:
+	  {
+		BLEmodule4eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE_5_MODULES, sizeof(imu_100Hz_data_t));
+		break;
+	  }
+	  case 4:
+	  {
+		BLEmodule4eventQueue = xQueueCreate(SENSOR_EVENT_QUEUE_SIZE_4_MODULES, sizeof(imu_100Hz_data_t));
+		break;
+	  }
+	}
 #if PRINTF_APP_BLEMODULE4_DBG
     if (BLEmodule4eventQueue == NULL)
     {
@@ -78,16 +109,18 @@ static void BLEmodule4_init(void)
     }
 #endif
   }
-  else
-  {
-    xQueueSend(pPrintQueue, "[APP_BLEmodule4] [BLEmodule4_init] BLE module 4 event queue not created.\n", 0);
-  }
 }
 
 void sensorHandlerBLEmodule4(imu_100Hz_data_t *sensorEvent)
 {
-  xQueueSend(BLEmodule4eventQueue, sensorEvent, 0);
-  xSemaphoreGive(wakeBLEmodule4Task);
+  if (xQueueSend(BLEmodule4eventQueue, sensorEvent, 0) == pdPASS)
+  {
+    itemsAddedToBLEmodule4eventQueue++;
+  }
+  else
+  { // queue full
+//	xQueueSend(pPrintQueue, "[APP_BLEmodule4] [sensorHandlerBLEmodule4] Queue full.\n", 0);
+  }
 }
 
 int BLEmodule4_Config_Init()
@@ -96,11 +129,7 @@ int BLEmodule4_Config_Init()
   int n = getNumberOfInstrumentSpecificFromConfig(&decodedConfig.conf, SETUP_PRM_COMM_METHOD_BT); // Get number of BLE modules from config
   if (n >= 1)
   { // BLE modules are available, link the BLE module pointer handler to instrument_config_t structure from decodedConfig structure
-//#if PRINTF_APP_BLEMODULE4_DBG
-//    sprintf(string, "[APP_BLEmodule4] [BLEmodule4_Config_Init] Number of instruments with SETUP_PRM_COMM_METHOD_BT: %d.\n", n);
-//    xQueueSend(pPrintQueue, string, 0);
-//#endif
-	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule4Instrument, SETUP_PRM_COMM_METHOD_BT,3);
+	return getInstrumentFromConfig(&decodedConfig.conf, &pBLEmodule4Instrument, SETUP_PRM_COMM_METHOD_BT);
   }
   else
   {
