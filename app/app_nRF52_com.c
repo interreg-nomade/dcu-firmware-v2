@@ -208,9 +208,8 @@ void nRF52ComManagerThread(const void *params)
 //  	    	    data[g] = ((nRF52RxMsg.DU[start_pos + g*4] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 1] << 16) |
 //  	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 2] << 8) | nRF52RxMsg.DU[start_pos + g*4 + 3]);
 
-  	    		data_temp = (int16_t) ((nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) |
-  	    	    		   (nRF52RxMsg.DU[start_pos + g*4 + 1] << 8) | nRF52RxMsg.DU[start_pos + g*4]);
-  	    	    data[g] = (int32_t) data_temp;
+
+  	    	    data[g] = (int32_t) ((int32_t)(nRF52RxMsg.DU[start_pos + g*4 + 3] << 24) | (int32_t)(nRF52RxMsg.DU[start_pos + g*4 + 2] << 16) | (int32_t)(nRF52RxMsg.DU[start_pos + g*4 + 1] << 8) | (int32_t)(nRF52RxMsg.DU[start_pos + g*4]));
 
   	    	    //data[g] = (float)data[g]/(float)(1<<30);
   	    	  }
